@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค่าไฟ-ค่าน้ำ คลอง 3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
@@ -14,12 +15,72 @@
         .val-water { color: #0dcaf0; font-weight: bold; }
         .val-fee { color: #fd7e14; } 
         .val-total { color: #198754; font-weight: bold; background-color: #e8f5e9 !important; }
+
+        /* ==========================================
+           สไตล์สำหรับส่วนใบแจ้งหนี้ (Print Area) 
+           ========================================== */
+        #printArea {
+            display: none; /* ซ่อนไว้ก่อน */
+            background-color: white;
+            font-family: 'Sarabun', sans-serif;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* ปุ่มควบคุมในหน้า Print */
+        .print-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #ccc;
+        }
+
+        .inv-header { text-align: center; margin-bottom: 20px; }
+        .inv-info { display: flex; justify-content: space-between; margin: 30px 0; font-size: 14px; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;}
+        .inv-table th, .inv-table td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+        .inv-table th { background: #f8f9fa; text-align: center; font-weight: bold;}
+        .text-left { text-align: left !important; }
+        .text-center { text-align: center !important; }
+        .bold { font-weight: bold; }
+        .vat-row { background: #fafafa; }
+        .total-row { background: #e8f5e9; font-size: 1.1em; }
+        
+        .note-section {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            font-size: 13px;
+        }
+        .note-title { font-weight: bold; text-decoration: underline; margin-bottom: 5px; }
+        .inv-footer { margin-top: 50px; display: flex; justify-content: flex-end; }
+
+        /* ==========================================
+           สไตล์เมื่อถูกสั่ง Print จริงๆ
+           ========================================== */
+        @media print {
+            body { background-color: white; padding: 0; margin: 0; }
+            #dashboardArea { display: none !important; } /* ซ่อน Dashboard หน้าแรก */
+            .print-controls { display: none !important; } /* ซ่อนปุ่มกดตอนพิมพ์ */
+            #printArea { 
+                display: block !important; 
+                box-shadow: none; 
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+            }
+            @page { margin: 1.5cm; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container-fluid px-4">
-    <h2 class="mb-4 text-primary">📊สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.09</h2>
+<div id="dashboardArea" class="container-fluid px-2 px-md-4">
+    <h2 class="mb-4 text-primary">📊 สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.10</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -31,9 +92,9 @@
             </div>
             <div class="col-md-8 mt-3 mt-md-0 d-flex gap-3 text-muted">
                 <div id="rateInfo" style="display: none;">
-                    <strong>เรทค่าบริการเดือนนี้:</strong> 
-                    ไฟ <span id="euRate" class="text-danger fw-bold">0</span> บาท/หน่วย | 
-                    น้ำ <span id="wuRate" class="text-info fw-bold">0</span> บาท/หน่วย
+                    <strong>เรท:</strong> 
+                    ไฟ <span id="euRate" class="text-danger fw-bold">0</span> บ. | 
+                    น้ำ <span id="wuRate" class="text-info fw-bold">0</span> บ.
                 </div>
             </div>
         </div>
@@ -41,17 +102,17 @@
 
     <div class="card p-0 overflow-hidden">
         <div class="table-responsive">
-            <table class="table table-hover table-bordered mb-0 align-middle text-center">
+            <table class="table table-hover table-bordered mb-0 align-middle text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-start">Customer (ชื่อลูกค้า)</th>
-                        <th>ไฟฟ้า(หน่วย)</th>
-                        <th>ค่าไฟ(บาท)</th>
-                        <th>น้ำ(หน่วย)</th>
-                        <th>ค่าน้ำ(บาท)</th>
-                        <th>ส่วนกลาง(บาท)</th>
-                        <th>ไฟส่องป้าย(บาท)</th>
-                        <th class="bg-light">รวมทั้งหมด (บาท)</th>
+                        <th class="text-start">Customer</th>
+                        <th>ไฟ (หน่วย)</th>
+                        <th>ค่าไฟ</th>
+                        <th>น้ำ (หน่วย)</th>
+                        <th>ค่าน้ำ</th>
+                        <th>ส่วนกลาง</th>
+                        <th>ป้าย</th>
+                        <th class="bg-light">รวม(บาท)</th>
                         <th>พิมพ์</th>
                     </tr>
                 </thead>
@@ -60,14 +121,14 @@
                 </tbody>
                 <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
                     <tr>
-                        <td class="text-end">ยอดรวมทั้งหมด:</td>
+                        <td class="text-end">รวม:</td>
                         <td id="sumElecUnits">0</td>
                         <td id="sumElecPrice" class="val-elec">0</td>
                         <td id="sumWaterUnits">0</td>
                         <td id="sumWaterPrice" class="val-water">0</td>
                         <td id="sumCommonFee" class="val-fee">0</td>
                         <td id="sumSignFee" class="val-fee">0</td>
-                        <td id="sumTotalPrice" class="val-total fs-5">0</td>
+                        <td id="sumTotalPrice" class="val-total">0</td>
                         <td></td>
                     </tr>
                 </tfoot>
@@ -76,13 +137,70 @@
     </div>
 </div>
 
+<div id="printArea">
+    <div class="print-controls">
+        <button class="btn btn-secondary" onclick="closePrintView()">⬅️ กลับหน้าหลัก</button>
+        <button class="btn btn-success" onclick="executePrint()">🖨️ สั่งพิมพ์ / บันทึก PDF</button>
+    </div>
+
+                <div class="header">
+                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">ใบแจ้งหนี้</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #222;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
+                    <div style="font-size: 15px; color: #555;">
+                        9 หมู่ที่ 3 ต.คลองสาม<br>
+                        อ.คลองหลวง จ.ปทุมธานี 12120<br>
+						เลขผู้เสียภาษี 0125565020521
+                    </div>
+                </div>
+
+    <div class="inv-info">
+        <div>
+            <strong>ชื่อลูกค้า:</strong> <span id="inv-customerName">-</span><br>
+            <strong>ที่อยู่:</strong> <span id="inv-address">-</span><br>
+        </div>
+        <div class="text-left">
+            <strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br>
+            <strong>วันที่:</strong> <span id="inv-date">-</span>
+        </div>
+    </div>
+
+    <table class="inv-table">
+        <thead>
+            <tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr>
+        </thead>
+        <tbody id="inv-tbody">
+            </tbody>
+    </table>
+
+                <div class="note-section">
+                    <div class="note-title">หมายเหตุ / ช่องทางการชำระเงิน:</div>
+                    <div>• กรุณาชำระเงินภายในวันที่ 5 ของเดือน</div>
+                    <div>• ชื่อบัญชี บจก.เอกรัตนโรจน์ คลอง 3 จำกัด</div>
+					<div>• ธ.กรุงเทพ เลขที่ 231-0-65533-3 สาขาเขื่อนขันธ์-พระประแดง</div>
+                    <div>• เมื่อโอนแล้วกรุณาส่งสลิปยืนยันทาง LINE หรือสำนักงาน</div>
+                </div>
+
+    <div class="inv-footer">
+        <div class="text-center" style="width:200px;">
+            <br><br>
+            ..........................................<br>
+            (ผู้รับเงิน)
+        </div>
+    </div>
+</div>
+
 <script>
+    // 📌 นำ Web App URL ของ Apps Script มาใส่ตรงนี้
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
 
     let rawHeaders = [];
     let rawRows = [];
     let currentMonthDataForPrint = {}; 
     let currentSelectedMonthName = "";
+    
+    // จำชื่อลูกค้าที่กำลังจะปริ้น เพื่อไว้ตั้งชื่อไฟล์
+    let activePrintCustomer = ""; 
+    const originalDocumentTitle = document.title;
 
     async function fetchUsageData() {
         try {
@@ -145,14 +263,10 @@
                 if (!customerData[customerName]) {
                     customerData[customerName] = { elecUnits: 0, waterUnits: 0, commonFee: 0, signFee: 0, address: '' };
                 }
-                
                 if (id.startsWith('E')) customerData[customerName].elecUnits += usageValue;
                 else if (id.startsWith('W')) customerData[customerName].waterUnits += usageValue;
 
-                // ดึงที่อยู่
-                if (addressIdx >= 0 && row[addressIdx]) {
-                    customerData[customerName].address = String(row[addressIdx]).trim();
-                }
+                if (addressIdx >= 0 && row[addressIdx]) customerData[customerName].address = String(row[addressIdx]).trim();
 
                 const cFee = commonFeeIdx >= 0 ? (Number(row[commonFeeIdx]) || 0) : 0;
                 const sFee = signFeeIdx >= 0 ? (Number(row[signFeeIdx]) || 0) : 0;
@@ -202,7 +316,7 @@
                     <td class="val-fee">${data.commonFee > 0 ? data.commonFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
                     <td class="val-fee">${data.signFee > 0 ? data.signFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
                     <td class="val-total">${totalPrice > 0 ? totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                    <td><button class="btn btn-sm btn-outline-primary" onclick="printInvoice('${safeCustName}')">🖨️ พิมพ์</button></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="openPrintView('${safeCustName}')">🖨️</button></td>
                 </tr>
             `;
         });
@@ -223,109 +337,59 @@
         document.getElementById('tableBody').innerHTML = tbodyHTML;
     }
 
-	function printInvoice(customerName) {
+    // ==========================================
+    // ระบบ Print ภายในหน้าเดียว (SPA Approach)
+    // ==========================================
+
+    function openPrintView(customerName) {
         const data = currentMonthDataForPrint[customerName];
         if (!data) return;
 
+        activePrintCustomer = customerName;
         const vat = data.totalPrice * 0.07;
         const grandTotal = data.totalPrice + vat;
 
-        const printWindow = window.open('', '_blank');
-        const html = `
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>ใบแจ้งหนี้-${customerName}-${currentSelectedMonthName}</title>
-                <style>
-                    body { font-family: 'Sarabun', sans-serif; padding: 40px; color: #333; }
-                    .header { text-align: center; margin-bottom: 20px; }
-                    .info { display: flex; justify-content: space-between; margin: 30px 0; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
-                    th { background: #f8f9fa; text-align: center; }
-                    .text-left { text-align: left; }
-                    .bold { font-weight: bold; }
-                    .vat-row { background: #fafafa; }
-                    .total-row { background: #e8f5e9; font-size: 1.1em; }
-                    
-                    /* ส่วนของหมายเหตุ */
-                    .note-section {
-                        margin-top: 30px;
-                        padding: 15px;
-                        border: 1px dashed #ccc;
-                        background-color: #fff;
-                        font-size: 14px;
-                    }
-                    .note-title {
-                        font-weight: bold;
-                        text-decoration: underline;
-                        margin-bottom: 5px;
-                    }
-                    
-                    .footer { margin-top: 50px; display: flex; justify-content: flex-end; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">ใบแจ้งหนี้</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #222;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
-                    <div style="font-size: 15px; color: #555;">
-                        9 หมู่ที่ 3 ต.คลองสาม<br>
-                        อ.คลองหลวง จ.ปทุมธานี 12120<br>
-						เลขผู้เสียภาษี 0125565020521
-                    </div>
-                </div>
+        // เติมข้อมูลลงใน HTML ของใบแจ้งหนี้
+        document.getElementById('inv-customerName').innerText = customerName;
+        document.getElementById('inv-address').innerText = data.address || '-';
+        document.getElementById('inv-month').innerText = currentSelectedMonthName;
+        document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
 
-                <div class="info">
-                    <div>
-                        <strong>ชื่อลูกค้า:</strong> ${customerName}<br>
-                        <strong>ที่อยู่:</strong> ${data.address || '-'}<br>
-                    </div>
-                    <div>
-                        <strong>ประจำเดือน:</strong> ${currentSelectedMonthName}<br>
-                        <strong>วันที่:</strong> ${new Date().toLocaleDateString('th-TH')}
-                    </div>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td class="text-left">1. ค่าไฟฟ้า</td><td>${data.elecUnits.toLocaleString()}</td><td>${data.euRate.toFixed(2)}</td><td>${data.ePrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr><td class="text-left">2. ค่าน้ำประปา</td><td>${data.waterUnits.toLocaleString()}</td><td>${data.wuRate.toFixed(2)}</td><td>${data.wPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${data.commonFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${data.signFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษีมูลค่าเพิ่ม</td><td>${data.totalPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr class="vat-row"><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                        <tr class="total-row bold"><td colspan="3" class="text-left">ยอดรวมทั้งสิ้นที่ต้องชำระ (รวมภาษี)</td><td>${grandTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-                    </tbody>
-                </table>
-
-                <div class="note-section">
-                    <div class="note-title">หมายเหตุ / ช่องทางการชำระเงิน:</div>
-                    <div>• กรุณาชำระเงินภายในวันที่ 5 ของเดือน</div>
-                    <div>• ชื่อบัญชี บจก.เอกรัตนโรจน์ คลอง 3 จำกัด</div>
-					<div>• ธ.กรุงเทพ เลขที่ 231-0-65533-3 สาขาเขื่อนขันธ์-พระประแดง</div>
-                    <div>• เมื่อโอนแล้วกรุณาส่งสลิปยืนยันทาง LINE หรือสำนักงาน</div>
-                </div>
-
-                <div class="footer">
-                    <div style="text-align:center; width:250px;">
-                        <br><br>
-                        ..........................................<br>
-                        (ผู้รับเงิน)
-                    </div>
-                </div>
-            </body>
-            </html>
+        const tbodyHTML = `
+            <tr><td class="text-left">1. ค่าไฟฟ้า</td><td>${data.elecUnits.toLocaleString()}</td><td>${data.euRate.toFixed(2)}</td><td>${data.ePrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">2. ค่าน้ำประปา</td><td>${data.waterUnits.toLocaleString()}</td><td>${data.wuRate.toFixed(2)}</td><td>${data.wPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${data.commonFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${data.signFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษีมูลค่าเพิ่ม</td><td>${data.totalPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr class="vat-row"><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr class="total-row bold"><td colspan="3" class="text-left">ยอดรวมทั้งสิ้นที่ต้องชำระ (รวมภาษี)</td><td>${grandTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
         `;
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.onload = () => { printWindow.print(); };
+        document.getElementById('inv-tbody').innerHTML = tbodyHTML;
+
+        // เปลี่ยนชื่อ Title ของเว็บชั่วคราว เพื่อให้ตอน Save PDF ได้ชื่อไฟล์นี้
+        document.title = `ใบแจ้งหนี้-${customerName}-${currentSelectedMonthName}`;
+
+        // สลับการแสดงผล (ซ่อน Dashboard -> โชว์บิล)
+        document.getElementById('dashboardArea').style.display = 'none';
+        document.getElementById('printArea').style.display = 'block';
+        window.scrollTo(0, 0); // เลื่อนจอขึ้นบนสุด
+    }
+
+    function executePrint() {
+        window.print(); // เรียกคำสั่ง Print ของเบราว์เซอร์
+    }
+
+    function closePrintView() {
+        // คืนชื่อ Title กลับเป็นเหมือนเดิม
+        document.title = originalDocumentTitle;
+
+        // สลับการแสดงผล (ซ่อนบิล -> โชว์ Dashboard)
+        document.getElementById('printArea').style.display = 'none';
+        document.getElementById('dashboardArea').style.display = 'block';
     }
 
     window.onload = fetchUsageData;
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
