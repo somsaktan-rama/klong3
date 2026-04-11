@@ -20,7 +20,7 @@
     </style>
   </head>
   <body>
-    <h2>กรอก meter คลอง 3 V1.04</h2>
+    <h2>กรอก meter คลอง 3 V1.05</h2>
 
     <div class="stack">
       <div class="row">
@@ -116,10 +116,10 @@
         const lastValueInput = document.getElementById('lastValue');
 
         // --- 1. เคลียร์ข้อมูลและล็อกหน้าจอก่อนโหลด ---
-        newInput.disabled = true;           // ล็อกไม่ให้พิมพ์
-        saveBtn.disabled = true;            // ล็อกปุ่มบันทึก
+        newInput.disabled = true;           
+        saveBtn.disabled = true;            
         newInput.value = '';                
-        newInput.placeholder = "⏳ กำลังดึงข้อมูล..."; // เปลี่ยนข้อความให้รู้ว่ากำลังโหลด
+        newInput.placeholder = "⏳ กำลังดึงข้อมูล..."; 
         lastValueInput.value = "";          
         lastValueInput.placeholder = "กำลังโหลด...";
         diffElem.textContent = "...";       
@@ -129,18 +129,22 @@
           const response = await fetch(WEB_APP_URL + "?action=getInfo&id=" + id);
           const res = await response.json();
 
+          // --- 🔥 คลีนข้อมูล: บังคับตัดช่องว่าง (Space) ที่อาจแฝงมาจาก Google Sheets ---
+          const rawLast = String(res.lastValue || '').trim();
+          const rawCurr = String(res.currValue || '').trim();
+
           // --- 2. ข้อมูลเดือนที่แล้ว ---
-          lastVal = res.lastValue !== '' && res.lastValue != null ? Number(res.lastValue) : 0;
+          lastVal = rawLast !== '' ? Number(rawLast) : 0;
           lastValueInput.value = lastVal;
           document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
 
           // --- 3. ข้อมูลเดือนปัจจุบัน & Auto-fill ---
-          if (res.currValue !== '' && res.currValue != null) {
-            // กรณีที่ 1: ถ้าเคยมีการบันทึกค่าของ "เดือนนี้" ไปแล้ว ให้ดึงค่านั้นมาแสดง
-            newInput.value = res.currValue; 
+          if (rawCurr !== '') {
+            // กรณีที่ 1: ถ้าเดือนนี้มีข้อมูลแล้วจริงๆ (ไม่ใช่แค่ช่องว่าง) ให้ใช้ค่าปัจจุบัน
+            newInput.value = Number(rawCurr); 
           } else {
-            // กรณีที่ 2: ถ้า "เดือนนี้" ยังไม่เคยบันทึก ให้เอาค่าของเดือนที่แล้ว (lastVal) มาใส่เลย
-            newInput.value = lastVal !== 0 ? lastVal : ''; 
+            // กรณีที่ 2: ถ้าเดือนนี้ว่างเปล่าชัวร์ๆ ให้ดึงค่าเดือนที่แล้ว (lastVal) มาใส่
+            newInput.value = lastVal > 0 ? lastVal : ''; 
           }
 
           // อัปเดตผลต่างทันที
@@ -153,15 +157,14 @@
           }
 
         } catch (err) {
+          console.error(err);
           alert('ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง: ' + err.message);
           newInput.placeholder = "เกิดข้อผิดพลาด";
         } finally {
-          // --- 4. โหลดเสร็จสิ้น ปลดล็อกหน้าจอให้ใช้งานต่อได้ ---
+          // --- 4. โหลดเสร็จสิ้น ปลดล็อกหน้าจอ ---
           newInput.disabled = false;
           saveBtn.disabled = false;
           newInput.placeholder = "กรอกค่าปัจจุบัน";
-          
-          // โฟกัสไปที่ช่องกรอกตัวเลขให้อัตโนมัติ (ผู้ใช้จะได้ไม่ต้องจิ้มซ้ำ)
           newInput.focus();
         }
       }      
