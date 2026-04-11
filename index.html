@@ -20,7 +20,7 @@
     </style>
   </head>
   <body>
-    <h2>กรอก meter คลอง 3 V1.03</h2>
+    <h2>กรอก meter คลอง 3 V1.04</h2>
 
     <div class="stack">
       <div class="row">
@@ -47,7 +47,7 @@
     <div class="row current-row">
       <label for="newValue">ค่าปัจจุบัน:</label>
       <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
-      <button onclick="saveData()">💾 บันทึกข้อมูล</button>
+      <button id="saveBtn" onclick="saveData()" disabled>💾 บันทึกข้อมูล</button>
       <span id="status"></span>
     </div>
 
@@ -107,43 +107,64 @@
         }
       }
 
-      // โหลดข้อมูล "เดือนก่อนหน้า" และ "เดือนปัจจุบัน" (GET)
+// โหลดข้อมูล "เดือนก่อนหน้า" และ "เดือนปัจจุบัน" (GET)
       async function loadInfo(id) {
+        const newInput = document.getElementById('newValue');
+        const currMeta = document.getElementById('currMeta');
+        const saveBtn = document.getElementById('saveBtn');
+        const diffElem = document.getElementById('diff');
+        const lastValueInput = document.getElementById('lastValue');
+
+        // --- 1. เคลียร์ข้อมูลและล็อกหน้าจอก่อนโหลด ---
+        newInput.disabled = true;           // ล็อกไม่ให้พิมพ์
+        saveBtn.disabled = true;            // ล็อกปุ่มบันทึก
+        newInput.value = '';                
+        newInput.placeholder = "⏳ กำลังดึงข้อมูล..."; // เปลี่ยนข้อความให้รู้ว่ากำลังโหลด
+        lastValueInput.value = "";          
+        lastValueInput.placeholder = "กำลังโหลด...";
+        diffElem.textContent = "...";       
+        currMeta.textContent = '';
+
         try {
           const response = await fetch(WEB_APP_URL + "?action=getInfo&id=" + id);
           const res = await response.json();
 
-          // 1. ดึงค่าเดือนที่แล้วมาเก็บไว้ในตัวแปร lastVal
-          lastVal = Number(res.lastValue || 0);
-          document.getElementById('lastValue').value = lastVal;
+          // --- 2. ข้อมูลเดือนที่แล้ว ---
+          lastVal = res.lastValue !== '' && res.lastValue != null ? Number(res.lastValue) : 0;
+          lastValueInput.value = lastVal;
           document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
 
-          const newInput = document.getElementById('newValue');
-          const currMeta = document.getElementById('currMeta');
-
-          // 2. เช็คว่ามีค่าของเดือนปัจจุบันหรือยัง
+          // --- 3. ข้อมูลเดือนปัจจุบัน & Auto-fill ---
           if (res.currValue !== '' && res.currValue != null) {
-            newInput.value = res.currValue; // ถ้าเคยกรอกแล้ว ให้เอาค่าที่เคยกรอกมาแสดง
+            // กรณีที่ 1: ถ้าเคยมีการบันทึกค่าของ "เดือนนี้" ไปแล้ว ให้ดึงค่านั้นมาแสดง
+            newInput.value = res.currValue; 
           } else {
-            // *** จุดที่แก้ไข *** // ถ้ายังไม่เคยกรอก ให้เอาค่าเดือนที่แล้ว (lastVal) มาใส่แทน
-            // โดยเช็คว่าถ้าไม่มีค่าเดือนที่แล้วเลย (เป็น 0) ก็ปล่อยว่างไว้ได้
-            newInput.value = lastVal > 0 ? lastVal : ''; 
+            // กรณีที่ 2: ถ้า "เดือนนี้" ยังไม่เคยบันทึก ให้เอาค่าของเดือนที่แล้ว (lastVal) มาใส่เลย
+            newInput.value = lastVal !== 0 ? lastVal : ''; 
           }
-          
-          // คำนวณผลต่างใหม่เสมอ (ค่าปัจจุบัน - ค่าเดือนที่แล้ว)
+
+          // อัปเดตผลต่างทันที
           updateDiff();
 
-          // 3. แสดง Note ข้อมูลเดิม (ถ้ามี)
+          // แสดง Note (ถ้ามี)
           if (res.currNote) {
             const label = res.currMonth ? res.currMonth : 'เดือนนี้';
             currMeta.textContent = `มีข้อมูลเดิมใน ${label} • Note: ${res.currNote}`;
-          } else {
-            currMeta.textContent = '';
           }
+
         } catch (err) {
-          alert('ดึงข้อมูลล้มเหลว: ' + err.message);
+          alert('ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง: ' + err.message);
+          newInput.placeholder = "เกิดข้อผิดพลาด";
+        } finally {
+          // --- 4. โหลดเสร็จสิ้น ปลดล็อกหน้าจอให้ใช้งานต่อได้ ---
+          newInput.disabled = false;
+          saveBtn.disabled = false;
+          newInput.placeholder = "กรอกค่าปัจจุบัน";
+          
+          // โฟกัสไปที่ช่องกรอกตัวเลขให้อัตโนมัติ (ผู้ใช้จะได้ไม่ต้องจิ้มซ้ำ)
+          newInput.focus();
         }
-      }
+      }      
       
       function updateDiff() {
         const newVal = Number(document.getElementById('newValue').value || 0);
