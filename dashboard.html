@@ -19,7 +19,7 @@
 <body>
 
 <div class="container-fluid px-4">
-    <h2 class="mb-4 text-primary">📊 สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.03</h2>
+    <h2 class="mb-4 text-primary">📊สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.06</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -77,13 +77,10 @@
 </div>
 
 <script>
-    // 📌 นำ Web App URL ของ Apps Script มาใส่ตรงนี้
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
 
     let rawHeaders = [];
     let rawRows = [];
-    
-    // ตัวแปรสำหรับเก็บข้อมูลไว้ใช้ตอนพิมพ์ใบแจ้งหนี้
     let currentMonthDataForPrint = {}; 
     let currentSelectedMonthName = "";
 
@@ -91,31 +88,24 @@
         try {
             const response = await fetch(WEB_APP_URL + "?action=getUsageData");
             const res = await response.json();
-
             if (res.status === 'success') {
                 rawHeaders = res.headers;
                 rawRows = res.rows;
                 setupMonthSelector();
-            } else {
-                alert("เกิดข้อผิดพลาด: " + res.message);
-            }
-        } catch (error) {
-            alert("ไม่สามารถดึงข้อมูลได้: " + error.message);
-        }
+            } else { alert("เกิดข้อผิดพลาด: " + res.message); }
+        } catch (error) { alert("ไม่สามารถดึงข้อมูลได้: " + error.message); }
     }
 
     function setupMonthSelector() {
         const monthSelect = document.getElementById('monthSelect');
         monthSelect.innerHTML = '';
-        
         let availableMonths = [];
         for (let i = 4; i < rawHeaders.length; i++) {
             let hName = String(rawHeaders[i]).trim();
-            if (hName !== '' && hName.toLowerCase() !== 'commonfee' && hName.toLowerCase() !== 'signfee') {
+            if (hName !== '' && !['commonfee', 'signfee', 'address'].includes(hName.toLowerCase())) {
                 availableMonths.push({ name: hName, index: i });
             }
         }
-
         availableMonths.reverse();
         availableMonths.forEach(m => {
             let option = document.createElement('option');
@@ -123,14 +113,8 @@
             option.text = m.name;
             monthSelect.appendChild(option);
         });
-
         monthSelect.disabled = false;
-        
-        if(availableMonths.length > 0) {
-            renderDashboard();
-        } else {
-            document.getElementById('tableBody').innerHTML = `<tr><td colspan="9" class="text-center text-muted">ยังไม่มีข้อมูลคอลัมน์เดือนในชีต</td></tr>`;
-        }
+        if(availableMonths.length > 0) renderDashboard();
     }
 
     function renderDashboard() {
@@ -139,16 +123,16 @@
         if (isNaN(colIndex)) return;
 
         currentSelectedMonthName = selectElem.options[selectElem.selectedIndex].text;
-        currentMonthDataForPrint = {}; // ล้างข้อมูลเดิม
+        currentMonthDataForPrint = {};
 
         const commonFeeIdx = rawHeaders.findIndex(h => String(h).trim().toLowerCase() === 'commonfee');
         const signFeeIdx = rawHeaders.findIndex(h => String(h).trim().toLowerCase() === 'signfee');
+        const addressIdx = rawHeaders.findIndex(h => String(h).trim().toLowerCase() === 'address');
 
         let euRate = 0;
         let wuRate = 0;
         const customerData = {};
 
-        // 1. หาเรทและรวบรวมข้อมูล
         rawRows.forEach(row => {
             const id = String(row[0] || '').trim().toUpperCase();
             const customerName = String(row[3] || '').trim();
@@ -159,15 +143,19 @@
 
             if (customerName !== '' && id !== 'EU' && id !== 'WU') {
                 if (!customerData[customerName]) {
-                    customerData[customerName] = { elecUnits: 0, waterUnits: 0, commonFee: 0, signFee: 0 };
+                    customerData[customerName] = { elecUnits: 0, waterUnits: 0, commonFee: 0, signFee: 0, address: '' };
                 }
                 
                 if (id.startsWith('E')) customerData[customerName].elecUnits += usageValue;
                 else if (id.startsWith('W')) customerData[customerName].waterUnits += usageValue;
 
+                // ดึงที่อยู่
+                if (addressIdx >= 0 && row[addressIdx]) {
+                    customerData[customerName].address = String(row[addressIdx]).trim();
+                }
+
                 const cFee = commonFeeIdx >= 0 ? (Number(row[commonFeeIdx]) || 0) : 0;
                 const sFee = signFeeIdx >= 0 ? (Number(row[signFeeIdx]) || 0) : 0;
-
                 customerData[customerName].commonFee += cFee;
                 customerData[customerName].signFee += sFee;
             }
@@ -177,7 +165,6 @@
         document.getElementById('wuRate').innerText = wuRate.toLocaleString(undefined, {minimumFractionDigits: 2});
         document.getElementById('rateInfo').style.display = 'block';
 
-        // 2. สร้างตารางและคำนวณเงินรวม
         let tbodyHTML = '';
         let sums = { eUnits: 0, ePrice: 0, wUnits: 0, wPrice: 0, cFee: 0, sFee: 0, total: 0 };
         const sortedCustomers = Object.keys(customerData).sort();
@@ -188,12 +175,11 @@
             const wPrice = data.waterUnits * wuRate;
             const totalPrice = ePrice + wPrice + data.commonFee + data.signFee;
 
-            // บันทึกข้อมูลลูกค้าคนนี้เก็บไว้สำหรับพิมพ์
             currentMonthDataForPrint[cust] = {
+                address: data.address,
                 elecUnits: data.elecUnits, ePrice: ePrice, euRate: euRate,
                 waterUnits: data.waterUnits, wPrice: wPrice, wuRate: wuRate,
-                commonFee: data.commonFee,
-                signFee: data.signFee,
+                commonFee: data.commonFee, signFee: data.signFee,
                 totalPrice: totalPrice
             };
 
@@ -205,8 +191,7 @@
             sums.sFee += data.signFee;
             sums.total += totalPrice;
 
-            const safeCustName = cust.replace(/'/g, "\\'"); // ป้องกันชื่อที่มี Single Quote ทำให้ปุ่มพัง
-
+            const safeCustName = cust.replace(/'/g, "\\'");
             tbodyHTML += `
                 <tr>
                     <td class="text-start fw-bold">${cust}</td>
@@ -217,15 +202,13 @@
                     <td class="val-fee">${data.commonFee > 0 ? data.commonFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
                     <td class="val-fee">${data.signFee > 0 ? data.signFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
                     <td class="val-total">${totalPrice > 0 ? totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="printInvoice('${safeCustName}')">🖨️ พิมพ์</button>
-                    </td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="printInvoice('${safeCustName}')">🖨️ พิมพ์</button></td>
                 </tr>
             `;
         });
 
         if (sortedCustomers.length === 0) {
-            tbodyHTML = `<tr><td colspan="9" class="text-center py-4">ไม่มีข้อมูลการใช้งานในเดือนนี้</td></tr>`;
+            tbodyHTML = `<tr><td colspan="9" class="text-center py-4">ไม่มีข้อมูลในเดือนนี้</td></tr>`;
             document.getElementById('tableFoot').style.display = 'none';
         } else {
             document.getElementById('sumElecUnits').innerText = sums.eUnits.toLocaleString();
@@ -237,123 +220,69 @@
             document.getElementById('sumTotalPrice').innerText = sums.total.toLocaleString(undefined, {minimumFractionDigits: 2});
             document.getElementById('tableFoot').style.display = 'table-footer-group';
         }
-
         document.getElementById('tableBody').innerHTML = tbodyHTML;
     }
 
-    // ฟังก์ชันสำหรับสร้างและพิมพ์ใบแจ้งหนี้
     function printInvoice(customerName) {
         const data = currentMonthDataForPrint[customerName];
-        if (!data) return alert("ไม่พบข้อมูลสำหรับพิมพ์");
+        if (!data) return;
 
-        // สร้างหน้าต่างใหม่
-        const printWindow = window.open('', '_blank', 'width=800,height=900');
-        
-        // เขียน HTML สำหรับใบแจ้งหนี้ (รูปแบบจัดไว้สำหรับ A4)
+        const vat = data.totalPrice * 0.07;
+        const grandTotal = data.totalPrice + vat;
+
+        const printWindow = window.open('', '_blank');
         const html = `
-            <!DOCTYPE html>
-            <html lang="th">
+            <html>
             <head>
                 <meta charset="UTF-8">
-                <title>ใบแจ้งหนี้ - ${customerName}</title>
                 <style>
-                    body { font-family: 'Sarabun', 'Segoe UI', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-                    .header { text-align: center; margin-bottom: 40px; }
-                    .header h1 { margin: 0; font-size: 28px; }
-                    .header h3 { margin: 5px 0 0 0; font-weight: normal; color: #666; }
-                    .info-box { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 16px; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                    th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-                    th { background-color: #f8f9fa; text-align: center; font-weight: bold; }
-                    .text-left { text-align: left !important; }
-                    .total-row { font-weight: bold; font-size: 18px; background-color: #f0f8ff; }
-                    .footer { margin-top: 50px; display: flex; justify-content: space-between; }
-                    .signature-box { text-align: center; width: 250px; }
-                    .signature-line { border-bottom: 1px solid #333; margin: 40px 0 10px 0; }
-                    @media print {
-                        body { padding: 0; }
-                        @page { margin: 1.5cm; }
-                    }
+                    body { font-family: 'Sarabun', sans-serif; padding: 40px; }
+                    .header { text-align: center; }
+                    .info { display: flex; justify-content: space-between; margin: 30px 0; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+                    th { background: #f8f9fa; text-align: center; }
+                    .text-left { text-align: left; }
+                    .bold { font-weight: bold; }
+                    .vat-row { background: #fafafa; }
+                    .total-row { background: #e8f5e9; font-size: 1.1em; }
+                    .footer { margin-top: 60px; display: flex; justify-content: flex-end; }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <h1>ใบแจ้งหนี้ค่าบริการส่วนกลาง และสาธารณูปโภค</h1>
-                    <h3>โครงการ Klong 3</h3>
-                </div>
-
-                <div class="info-box">
+                <div class="header"><h1>ใบแจ้งหนี้สาธารณูปโภค</h1><h3>บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</h3></div>
+                <div class="info">
                     <div>
                         <strong>ชื่อลูกค้า:</strong> ${customerName}<br>
+                        <strong>ที่อยู่:</strong> ${data.address || '-'}<br>
                     </div>
                     <div>
                         <strong>ประจำเดือน:</strong> ${currentSelectedMonthName}<br>
-                        <strong>วันที่ออกบิล:</strong> ${new Date().toLocaleDateString('th-TH')}
+                        <strong>วันที่:</strong> ${new Date().toLocaleDateString('th-TH')}
                     </div>
                 </div>
-
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="text-left" style="width: 40%">รายการ</th>
-                            <th>จำนวนหน่วย</th>
-                            <th>ราคา/หน่วย (บาท)</th>
-                            <th>จำนวนเงิน (บาท)</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
                     <tbody>
-                        <tr>
-                            <td class="text-left">1. ค่ากระแสไฟฟ้า</td>
-                            <td>${data.elecUnits > 0 ? data.elecUnits.toLocaleString() : '-'}</td>
-                            <td>${data.elecUnits > 0 ? data.euRate.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                            <td>${data.ePrice > 0 ? data.ePrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left">2. ค่าน้ำประปา</td>
-                            <td>${data.waterUnits > 0 ? data.waterUnits.toLocaleString() : '-'}</td>
-                            <td>${data.waterUnits > 0 ? data.wuRate.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                            <td>${data.wPrice > 0 ? data.wPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left">3. ค่าส่วนกลาง (Common Fee)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>${data.commonFee > 0 ? data.commonFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left">4. ค่าป้าย (Sign Fee)</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>${data.signFee > 0 ? data.signFee.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td colspan="3" class="text-left">ยอดรวมทั้งสิ้นต้องชำระ</td>
-                            <td>${data.totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                        </tr>
+                        <tr><td class="text-left">1. ค่าไฟฟ้า</td><td>${data.elecUnits.toLocaleString()}</td><td>${data.euRate.toFixed(2)}</td><td>${data.ePrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr><td class="text-left">2. ค่าน้ำประปา</td><td>${data.waterUnits.toLocaleString()}</td><td>${data.wuRate.toFixed(2)}</td><td>${data.wPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${data.commonFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${data.signFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษีมูลค่าเพิ่ม</td><td>${data.totalPrice.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr class="vat-row"><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+                        <tr class="total-row bold"><td colspan="3" class="text-left">ยอดรวมทั้งสิ้นที่ต้องชำระ (รวมภาษี)</td><td>${grandTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
                     </tbody>
                 </table>
-
-                <div class="footer">
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        (ผู้รับเงิน)
-                    </div>
-                </div>
+                <div class="footer"><div style="text-align:center; width:200px;"><br><br>..........................................<br>(ผู้รับเงิน)</div></div>
             </body>
             </html>
         `;
-
         printWindow.document.write(html);
         printWindow.document.close();
-        
-        // สั่งพิมพ์ทันทีหลังจากโหลดเนื้อหาเสร็จ
-        printWindow.onload = function() {
-            printWindow.print();
-        };
+        printWindow.onload = () => { printWindow.print(); };
     }
 
     window.onload = fetchUsageData;
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
