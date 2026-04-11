@@ -45,12 +45,12 @@
                 <thead class="table-light">
                     <tr>
                         <th class="text-start">Customer (ชื่อลูกค้า)</th>
-                        <th>ไฟฟ้า (หน่วย)</th>
-                        <th>ค่าไฟ (บาท)</th>
-                        <th>น้ำ (หน่วย)</th>
-                        <th>ค่าน้ำ (บาท)</th>
-                        <th>CommonFee (บาท)</th>
-                        <th>SignFee (บาท)</th>
+                        <th>ไฟฟ้า(หน่วย)</th>
+                        <th>ค่าไฟ(บาท)</th>
+                        <th>น้ำ(หน่วย)</th>
+                        <th>ค่าน้ำ(บาท)</th>
+                        <th>ส่วนกลาง(บาท)</th>
+                        <th>ไฟส่องป้าย(บาท)</th>
                         <th class="bg-light">รวมทั้งหมด (บาท)</th>
                         <th>พิมพ์</th>
                     </tr>
@@ -250,13 +250,16 @@
                 </style>
             </head>
             <body>
-                <div class="header">
-				    <h1>ใบแจ้งหนี้</h1>
-                    <h3>บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</h3>
-					<h4>192/31 หมู่ที่1 ต.บางรักพัฒนา</h4>
-					<h4>อ.บางบัวทอง  จ.นนทบุรี 11110</h4>
-					<h4>0125565020521</h4>
-				</div>
+
+		<div style="text-align: center;">
+			<h1 style="margin-bottom: 10px;">ใบแจ้งหนี้</h1>
+			<h3 style="margin: 0; color: #333;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</h3>
+			<h4 style="margin: 5px 0 0 0; font-weight: normal; color: #555;">
+			192/31 หมู่ที่ 1 ต.บางรักพัฒนา<br>
+			อ.บางบัวทอง จ.นนทบุรี 11110
+			เลขผู้เสียภาษี 0125565020521
+			</h4>
+		</div>
                 <div class="info">
                     <div>
                         <strong>ชื่อลูกค้า:</strong> ${customerName}<br>
