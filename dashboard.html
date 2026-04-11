@@ -20,7 +20,7 @@
            สไตล์สำหรับส่วนใบแจ้งหนี้ (Print Area) 
            ========================================== */
         #printArea {
-            display: none; /* ซ่อนไว้ก่อน */
+            display: none; 
             background-color: white;
             font-family: 'Sarabun', sans-serif;
             color: #333;
@@ -30,7 +30,6 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         
-        /* ปุ่มควบคุมในหน้า Print */
         .print-controls {
             display: flex;
             justify-content: space-between;
@@ -39,10 +38,10 @@
             border-bottom: 2px dashed #ccc;
         }
 
-        .inv-header { text-align: center; margin-bottom: 20px; }
-        .inv-info { display: flex; justify-content: space-between; margin: 30px 0; font-size: 14px; }
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;}
-        .inv-table th, .inv-table td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+        .inv-header { text-align: center; margin-bottom: 15px; }
+        .inv-info { display: flex; justify-content: space-between; margin: 20px 0; font-size: 14px; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px;}
+        .inv-table th, .inv-table td { border: 1px solid #ddd; padding: 8px 10px; text-align: right; }
         .inv-table th { background: #f8f9fa; text-align: center; font-weight: bold;}
         .text-left { text-align: left !important; }
         .text-center { text-align: center !important; }
@@ -50,22 +49,22 @@
         .vat-row { background: #fafafa; }
         .total-row { background: #e8f5e9; font-size: 1.1em; }
         
+        /* 📌 ปรับลดระยะห่างของส่วนหมายเหตุ เพื่อดึงบรรทัดผู้รับเงินขึ้นมา */
         .note-section {
-            margin-top: 30px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 10px 15px;
             border: 1px dashed #ccc;
             font-size: 13px;
         }
         .note-title { font-weight: bold; text-decoration: underline; margin-bottom: 5px; }
-        .inv-footer { margin-top: 50px; display: flex; justify-content: flex-end; }
+        
+        /* 📌 ปรับระยะห่างของลายเซ็น */
+        .inv-footer { margin-top: 25px; display: flex; justify-content: flex-end; }
 
-        /* ==========================================
-           สไตล์เมื่อถูกสั่ง Print จริงๆ
-           ========================================== */
         @media print {
             body { background-color: white; padding: 0; margin: 0; }
-            #dashboardArea { display: none !important; } /* ซ่อน Dashboard หน้าแรก */
-            .print-controls { display: none !important; } /* ซ่อนปุ่มกดตอนพิมพ์ */
+            #dashboardArea { display: none !important; } 
+            .print-controls { display: none !important; } 
             #printArea { 
                 display: block !important; 
                 box-shadow: none; 
@@ -73,14 +72,14 @@
                 margin: 0;
                 max-width: 100%;
             }
-            @page { margin: 1.5cm; }
+            @page { margin: 1cm; } /* ลดขอบกระดาษตอนพิมพ์ลงอีกนิด */
         }
     </style>
 </head>
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.10</h2>
+    <h2 class="mb-4 text-primary">📊 สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.11</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -169,7 +168,7 @@
             <tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr>
         </thead>
         <tbody id="inv-tbody">
-            </tbody>
+        </tbody>
     </table>
 
                 <div class="note-section">
@@ -182,9 +181,8 @@
 
     <div class="inv-footer">
         <div class="text-center" style="width:200px;">
-            <br><br>
-            ..........................................<br>
-            (ผู้รับเงิน)
+            <div style="margin-top: 35px; border-bottom: 1px dotted #333;"></div>
+            <div style="margin-top: 8px; font-size: 13px;">(ผู้รับเงิน)</div>
         </div>
     </div>
 </div>
@@ -197,8 +195,6 @@
     let rawRows = [];
     let currentMonthDataForPrint = {}; 
     let currentSelectedMonthName = "";
-    
-    // จำชื่อลูกค้าที่กำลังจะปริ้น เพื่อไว้ตั้งชื่อไฟล์
     let activePrintCustomer = ""; 
     const originalDocumentTitle = document.title;
 
@@ -337,10 +333,6 @@
         document.getElementById('tableBody').innerHTML = tbodyHTML;
     }
 
-    // ==========================================
-    // ระบบ Print ภายในหน้าเดียว (SPA Approach)
-    // ==========================================
-
     function openPrintView(customerName) {
         const data = currentMonthDataForPrint[customerName];
         if (!data) return;
@@ -349,7 +341,6 @@
         const vat = data.totalPrice * 0.07;
         const grandTotal = data.totalPrice + vat;
 
-        // เติมข้อมูลลงใน HTML ของใบแจ้งหนี้
         document.getElementById('inv-customerName').innerText = customerName;
         document.getElementById('inv-address').innerText = data.address || '-';
         document.getElementById('inv-month').innerText = currentSelectedMonthName;
@@ -366,24 +357,19 @@
         `;
         document.getElementById('inv-tbody').innerHTML = tbodyHTML;
 
-        // เปลี่ยนชื่อ Title ของเว็บชั่วคราว เพื่อให้ตอน Save PDF ได้ชื่อไฟล์นี้
         document.title = `ใบแจ้งหนี้-${customerName}-${currentSelectedMonthName}`;
 
-        // สลับการแสดงผล (ซ่อน Dashboard -> โชว์บิล)
         document.getElementById('dashboardArea').style.display = 'none';
         document.getElementById('printArea').style.display = 'block';
-        window.scrollTo(0, 0); // เลื่อนจอขึ้นบนสุด
+        window.scrollTo(0, 0); 
     }
 
     function executePrint() {
-        window.print(); // เรียกคำสั่ง Print ของเบราว์เซอร์
+        window.print(); 
     }
 
     function closePrintView() {
-        // คืนชื่อ Title กลับเป็นเหมือนเดิม
         document.title = originalDocumentTitle;
-
-        // สลับการแสดงผล (ซ่อนบิล -> โชว์ Dashboard)
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
