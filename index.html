@@ -20,7 +20,7 @@
     </style>
   </head>
   <body>
-    <h2>กรอก meter คลอง 3 V1.01</h2>
+    <h2>กรอก meter คลอง 3 V1.02</h2>
 
     <div class="stack">
       <div class="row">
@@ -39,14 +39,14 @@
     </div>
 
     <div class="row">
-      <label>ค่าของเดือนก่อนหน้า:</label>
+      <label>ค่าเดือนก่อน:</label>
       <input id="lastValue" type="number" readonly>
       <span id="lastMonth"></span>
     </div>
 
     <div class="row current-row">
       <label for="newValue">ค่าปัจจุบัน:</label>
-      <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
+      <input id="lastValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
       <button onclick="saveData()">💾 บันทึกข้อมูล</button>
       <span id="status"></span>
     </div>
