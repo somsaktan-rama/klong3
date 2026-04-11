@@ -1,213 +1,195 @@
 <!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
+<html>
+  <head>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klong3 Meter Data Entry V1.00</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>กรอก meter คลอง 3 (17/11/68)</title>
     <style>
-        body { background-color: #f8f9fa; padding-top: 20px; }
-        .card { border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      .row { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      select, input { padding: 6px; font-size: 16px; }
+      button { padding: 8px 16px; background: #4CAF50; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+      button:hover { background: #3F9A49; }
+      #diff { font-weight: bold; color: blue; }
+      #status { margin-left: 8px; }
+      .group { display: inline-flex; align-items: center; gap: 6px; }
+      label { min-width: 140px; }
+      .stack { display: flex; flex-direction: column; gap: 8px; }
+      .current-row { display: flex; align-items: center; gap: 8px; }
+      .note { color: #666; font-size: 13px; }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <h2>กรอก meter คลอง 3</h2>
 
-<div class="container">
-    <div class="card p-4">
-        <h3 class="text-center mb-4 text-primary">บันทึกค่าไฟ-ค่าน้ำ Klong3</h3>
-        
-        <form id="meterForm">
-            <div class="mb-3">
-                <label class="form-label">ชื่อผู้บันทึก *</label>
-                <input type="text" id="recorderName" class="form-control" required placeholder="ระบุชื่อของคุณ">
-            </div>
+    <div class="stack">
+      <div class="row">
+        <div class="group">
+          <label for="elist">มิเตอร์ไฟ (E001–E030):</label>
+          <select id="elist" onchange="onPick('E')"></select>
+        </div>
+      </div>
 
-            <div class="mb-3">
-                <label class="form-label">ประเภทมิเตอร์</label>
-                <select id="meterType" class="form-select" required onchange="filterData()">
-                    <option value="">-- เลือกประเภท --</option>
-                    <option value="E">ไฟฟ้า (E001-E030)</option>
-                    <option value="W">น้ำประปา (W001-W026)</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ข้อมูลลูกค้า (ID | Meter | ชื่อ)</label>
-                <select id="customerSelect" class="form-select" required onchange="updatePreviousData()" disabled>
-                    <option value="">-- กรุณาเลือกประเภทมิเตอร์ก่อน --</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">ประจำเดือน (คอลัมน์)</label>
-                <select id="monthSelect" class="form-select" required onchange="updatePreviousData()" disabled>
-                    </select>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-6">
-                    <label class="form-label text-muted">ค่าเดือนที่แล้ว</label>
-                    <input type="number" id="prevValue" class="form-control" readonly placeholder="ดึงข้อมูล...">
-                </div>
-                <div class="col-6">
-                    <label class="form-label text-danger fw-bold">ค่าเดือนปัจจุบัน *</label>
-                    <input type="number" id="currentValue" class="form-control" required placeholder="ระบุตัวเลข">
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 py-2" id="submitBtn" disabled>
-                <span id="btnText">บันทึกข้อมูล</span>
-            </button>
-        </form>
+      <div class="row">
+        <div class="group">
+          <label for="wlist">มิเตอร์น้ำ (W001–W026):</label>
+          <select id="wlist" onchange="onPick('W')"></select>
+        </div>
+      </div>
     </div>
-</div>
 
-<script>
-    // --- ตั้งค่าตัวแปรของคุณที่นี่ ---
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx0DHRLQKgr1GhpW_Mj4ga3hMwciCBbnt5qyAPdswvpDqoAkFB8Ag62uoMlp_xjFzpE/exec"; // นำ URL ที่ได้จาก GAS มาใส่ที่นี่ (ต้องลงท้ายด้วย /exec)
-    // ---------------------------------
+    <div class="row">
+      <label>ค่าของเดือนก่อนหน้า:</label>
+      <input id="lastValue" type="number" readonly>
+      <span id="lastMonth"></span>
+    </div>
 
-    let allSheetData = [];
-    let headers = [];
+    <div class="row current-row">
+      <label for="newValue">ค่าปัจจุบัน:</label>
+      <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
+      <button onclick="saveData()">💾 บันทึกข้อมูล</button>
+      <span id="status"></span>
+    </div>
 
-    // 1. โหลดข้อมูลจาก Google Sheet
-    async function loadDataFromSheet() {
+    <div class="row">
+      <label></label>
+      <span id="currMeta" class="note"></span>
+    </div>
+
+    <div class="row">
+      <label>ผลต่าง:</label>
+      <span id="diff">0</span>
+    </div>
+
+    <script>
+      // 📌 วาง Web App URL ที่ได้จาก Google Apps Script ที่นี่
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
+      
+      let lastVal = 0;
+
+      // โหลด 2 กลุ่มรายการ: E และ W ดึงข้อมูลผ่าน API (GET)
+      async function loadLists() {
         try {
-            console.log("กำลังเชื่อมต่อไปที่:", GAS_URL);
-            const response = await fetch(GAS_URL);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+          const response = await fetch(WEB_APP_URL + "?action=getLists");
+          const res = await response.json();
 
-            const data = await response.json();
-            allSheetData = data.data;
-            headers = data.headers;
-            
-            // ตั้งค่า Dropdown เดือน (ข้าม 4 คอลัมน์แรก: ID, no, meter, customer)
-            const monthSelect = document.getElementById('monthSelect');
-            monthSelect.innerHTML = '<option value="">-- เลือกเดือน --</option>';
-            for (let i = 4; i < headers.length; i++) {
-                if(headers[i]) {
-                    monthSelect.innerHTML += `<option value="${headers[i]}">${headers[i]}</option>`;
-                }
-            }
-            monthSelect.disabled = false;
-            console.log("โหลดข้อมูลสำเร็จ!");
+          const el = document.getElementById('elist');
+          const wl = document.getElementById('wlist');
 
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            alert('ไม่สามารถโหลดข้อมูลจากระบบได้ กรุณาตรวจสอบ:\n1. URL ของ GAS ถูกต้องหรือไม่\n2. สิทธิ์การเข้าถึง Web App เป็น "ทุกคน" (Anyone) หรือไม่\n\nรายละเอียด Error: ' + error.message);
+          el.appendChild(new Option('-- เลือก E001–E030 --', '', true, false));
+          wl.appendChild(new Option('-- เลือก W001–W026 --', '', true, false));
+
+          (res.E || []).forEach(item => el.appendChild(new Option(item.desc, item.id)));
+          (res.W || []).forEach(item => wl.appendChild(new Option(item.desc, item.id)));
+
+          if (res.E && res.E.length) {
+            el.selectedIndex = 1;
+            onPick('E');
+          }
+        } catch (err) {
+          alert('ไม่สามารถโหลดรายชื่อได้: ' + err.message);
         }
-    }
+      }
 
-    // 2. กรองข้อมูลตามประเภท (น้ำ/ไฟ)
-    function filterData() {
-        const type = document.getElementById('meterType').value;
-        const select = document.getElementById('customerSelect');
-        select.innerHTML = '<option value="">-- เลือกลูกค้า --</option>';
-        
-        if (!type) {
-            select.disabled = true;
-            document.getElementById('submitBtn').disabled = true;
-            return;
-        }
-
-        const filtered = allSheetData.filter(row => row.Klong3ID && row.Klong3ID.startsWith(type));
-        
-        filtered.forEach(row => {
-            select.innerHTML += `<option value="${row.Klong3ID}">${row.Klong3ID} | ${row.meter} | ${row.customer}</option>`;
-        });
-        
-        select.disabled = false;
-        document.getElementById('submitBtn').disabled = false;
-        updatePreviousData();
-    }
-
-    // 3. อัปเดตค่าเดือนที่แล้ว
-    function updatePreviousData() {
-        const id = document.getElementById('customerSelect').value;
-        const targetMonth = document.getElementById('monthSelect').value;
-        const prevInput = document.getElementById('prevValue');
-        
-        if (!id || !targetMonth) {
-            prevInput.value = "";
-            return;
-        }
-
-        const targetIndex = headers.indexOf(targetMonth);
-        if(targetIndex > 4) { 
-            const prevMonthHeader = headers[targetIndex - 1];
-            const customerData = allSheetData.find(row => row.Klong3ID === id);
-            
-            if(customerData && customerData[prevMonthHeader]) {
-                prevInput.value = customerData[prevMonthHeader];
-            } else {
-                prevInput.value = "0"; 
-            }
+      function onPick(group) {
+        const el = document.getElementById('elist');
+        const wl = document.getElementById('wlist');
+        const status = document.getElementById('status');
+        status.textContent = '';
+        if (group === 'E') {
+          wl.selectedIndex = 0;
+          const id = el.value;
+          if (id) loadInfo(id);
         } else {
-            prevInput.value = "0"; 
+          el.selectedIndex = 0;
+          const id = wl.value;
+          if (id) loadInfo(id);
         }
-    }
+      }
 
-    // 4. ส่งข้อมูลกลับไปบันทึก
-    document.getElementById('meterForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const recorderName = document.getElementById('recorderName').value; // ดึงชื่อจากช่องกรอก
-        const klong3ID = document.getElementById('customerSelect').value;
-        const targetMonth = document.getElementById('monthSelect').value;
-        const prevValue = parseFloat(document.getElementById('prevValue').value || 0);
-        const currentValue = parseFloat(document.getElementById('currentValue').value);
+      // โหลดข้อมูล "เดือนก่อนหน้า" และ "เดือนปัจจุบัน" (GET)
+      async function loadInfo(id) {
+        try {
+          const response = await fetch(WEB_APP_URL + "?action=getInfo&id=" + id);
+          const res = await response.json();
 
-        // ตรวจสอบเงื่อนไข: ค่าต้องไม่น้อยกว่าเดือนที่แล้ว
-        if (currentValue < prevValue) {
-            alert(`ข้อมูลผิดพลาด: ค่าที่ป้อน (${currentValue}) น้อยกว่าเดือนที่แล้ว (${prevValue})`);
-            return;
+          lastVal = Number(res.lastValue || 0);
+          document.getElementById('lastValue').value = lastVal;
+          document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
+
+          const newInput = document.getElementById('newValue');
+          const currMeta = document.getElementById('currMeta');
+
+          if (res.currValue !== '' && res.currValue != null) {
+            newInput.value = res.currValue;
+            updateDiff();
+          } else {
+            newInput.value = '';
+            document.getElementById('diff').textContent = '0';
+            document.getElementById('diff').style.color = 'blue';
+          }
+
+          if (res.currNote) {
+            const label = res.currMonth ? res.currMonth : 'เดือนนี้';
+            currMeta.textContent = `มีข้อมูลเดิมใน ${label} • Note: ${res.currNote}`;
+          } else {
+            currMeta.textContent = '';
+          }
+        } catch (err) {
+          alert('ดึงข้อมูลล้มเหลว: ' + err.message);
+        }
+      }
+
+      function updateDiff() {
+        const newVal = Number(document.getElementById('newValue').value || 0);
+        const diff = newVal - lastVal;
+        const diffElem = document.getElementById('diff');
+        diffElem.textContent = diff;
+        diffElem.style.color = diff < 0 ? 'red' : 'blue';
+      }
+
+      // บันทึกข้อมูล (POST)
+      async function saveData() {
+        const el = document.getElementById('elist');
+        const wl = document.getElementById('wlist');
+        const id = el.value || wl.value;
+        const newVal = Number(document.getElementById('newValue').value || 0);
+        const status = document.getElementById('status');
+
+        if (!id) { alert('กรุณาเลือกรายการจาก E หรือ W'); return; }
+
+        const lastField = document.getElementById('lastValue').value;
+        if (lastField !== '' && !Number.isNaN(lastVal) && newVal < lastVal) {
+          alert('ค่าปัจจุบันต้องมากกว่าหรือเท่ากับเดือนก่อนหน้า');
+          return;
         }
 
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerHTML = 'กำลังบันทึก...';
-
-        const payload = {
-            klong3ID: klong3ID,
-            targetMonth: targetMonth,
-            value: currentValue,
-            lineName: recorderName // ส่งชื่อที่กรอกไปแทน LINE Display Name
-        };
+        status.textContent = '⏳ กำลังบันทึก...';
+        const ua = navigator.userAgent || '';
 
         try {
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
-            });
-            
-            const result = await response.json();
-            if (result.status === "success") {
-                alert('บันทึกข้อมูลเรียบร้อยแล้ว!');
-                document.getElementById('meterForm').reset();
-                document.getElementById('prevValue').value = "";
-                filterData(); 
-            } else {
-                alert('เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Post Error:', error);
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'บันทึกข้อมูล';
+          // ใช้ Content-Type text/plain เพื่อหลีกเลี่ยงปัญหา CORS preflight
+          const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ id: id, newValue: newVal, userAgent: ua }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+          
+          const res = await response.json();
+
+          if (res.status === 'success') {
+            status.textContent = `${res.data.message} • เวลา ${res.data.timeStr}`;
+            loadInfo(id); 
+          } else {
+            status.textContent = '❌ ' + res.message;
+          }
+        } catch (err) {
+          status.textContent = '❌ ดึงข้อมูลล้มเหลว: ' + err.message;
         }
-    });
+      }
 
-    // เริ่มทำงานเมื่อเปิดหน้าเว็บ
-    window.onload = async () => {
-        await loadDataFromSheet();
-    };
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+      // เริ่มทำงานเมื่อเปิดหน้าเว็บ
+      window.onload = loadLists;
+    </script>
+  </body>
 </html>
