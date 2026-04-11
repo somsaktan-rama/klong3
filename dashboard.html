@@ -61,8 +61,13 @@
         /* 📌 ปรับระยะห่างของลายเซ็น */
         .inv-footer { margin-top: 25px; display: flex; justify-content: flex-end; }
 
-        @media print {
-            body { background-color: white; padding: 0; margin: 0; }
+@media print {
+            /* 📌 ตั้ง margin เป็น 0 เพื่อซ่อน URL และวันที่ของ Browser อัตโนมัติ */
+            @page { margin: 0; } 
+            
+            /* 📌 ใช้ padding ดันเนื้อหาลงมาแทน เพื่อไม่ให้ข้อความชิดขอบกระดาษตอนพรินต์ */
+            body { background-color: white; padding: 1.5cm; margin: 0; } 
+            
             #dashboardArea { display: none !important; } 
             .print-controls { display: none !important; } 
             #printArea { 
@@ -72,7 +77,6 @@
                 margin: 0;
                 max-width: 100%;
             }
-            @page { margin: 1cm; } /* ลดขอบกระดาษตอนพิมพ์ลงอีกนิด */
         }
     </style>
 </head>
