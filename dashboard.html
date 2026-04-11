@@ -19,7 +19,7 @@
 <body>
 
 <div class="container-fluid px-4">
-    <h2 class="mb-4 text-primary">📊สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.07</h2>
+    <h2 class="mb-4 text-primary">📊สรุปค่าไฟ-ค่าน้ำ คลอง3 V1.08</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -223,7 +223,7 @@
         document.getElementById('tableBody').innerHTML = tbodyHTML;
     }
 
-    function printInvoice(customerName) {
+function printInvoice(customerName) {
         const data = currentMonthDataForPrint[customerName];
         if (!data) return;
 
@@ -235,6 +235,7 @@
             <html>
             <head>
                 <meta charset="UTF-8">
+                <title>ใบแจ้งหนี้-${customerName}-${currentSelectedMonthName}</title>
                 <style>
                     body { font-family: 'Sarabun', sans-serif; padding: 40px; }
                     .header { text-align: center; }
@@ -250,16 +251,15 @@
                 </style>
             </head>
             <body>
-
-		<div style="text-align: center;">
-			<h1 style="margin-bottom: 10px;">ใบแจ้งหนี้</h1>
-			<h3 style="margin: 0; color: #333;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</h3>
-			<h4 style="margin: 5px 0 0 0; font-weight: normal; color: #555;">
-			192/31 หมู่ที่ 1 ต.บางรักพัฒนา<br>
-			อ.บางบัวทอง จ.นนทบุรี 11110<br>
-			เลขผู้เสียภาษี 0125565020521
-			</h4>
-		</div>
+                <div class="header">
+                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">ใบแจ้งหนี้</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #222;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
+                    <div style="font-size: 15px; color: #555;">
+                        192/31 หมู่ที่ 1 ต.บางรักพัฒนา<br>
+                        อ.บางบัวทอง จ.นนทบุรี 11110<br>
+						เลขผู้เสียภาษี 0125565020521
+                    </div>
+                </div>
                 <div class="info">
                     <div>
                         <strong>ชื่อลูกค้า:</strong> ${customerName}<br>
