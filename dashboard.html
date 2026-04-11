@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard ค่าไฟ-ค่าน้ำ คลอง 3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
+        .table-responsive { max-height: 60vh; overflow-y: auto; }
+        th { position: sticky; top: 0; background-color: #f8f9fa !important; z-index: 1; }
+        .summary-box { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; padding: 20px; border-radius: 12px; }
+        .val-elec { color: #d63384; font-weight: bold; }
+        .val-water { color: #0dcaf0; font-weight: bold; }
+        .val-total { color: #198754; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid px-4">
+    <h2 class="mb-4 text-primary">📊 Dashboard สรุปค่าใช้จ่าย Klong3</h2>
+
+    <div class="card p-3">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">เลือกเดือนที่ต้องการดูข้อมูล</label>
+                <select id="monthSelect" class="form-select" onchange="renderDashboard()" disabled>
+                    <option value="">⏳ กำลังโหลดข้อมูล...</option>
+                </select>
+            </div>
+            <div class="col-md-8 mt-3 mt-md-0 d-flex gap-3 text-muted">
+                <div id="rateInfo" style="display: none;">
+                    <strong>เรทค่าบริการเดือนนี้:</strong> 
+                    ไฟ <span id="euRate" class="text-danger fw-bold">0</span> บาท/หน่วย | 
+                    น้ำ <span id="wuRate" class="text-info fw-bold">0</span> บาท/หน่วย
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0 align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start">Customer (ชื่อลูกค้า)</th>
+                        <th>ไฟฟ้า (หน่วย)</th>
+                        <th>ค่าไฟ (บาท)</th>
+                        <th>น้ำ (หน่วย)</th>
+                        <th>ค่าน้ำ (บาท)</th>
+                        <th class="bg-light">รวมทั้งหมด (บาท)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="6" class="text-center text-muted py-4">รอโหลดข้อมูล...</td></tr>
+                </tbody>
+                <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
+                    <tr>
+                        <td class="text-end">ยอดรวมทั้งหมด:</td>
+                        <td id="sumElecUnits">0</td>
+                        <td id="sumElecPrice" class="val-elec">0</td>
+                        <td id="sumWaterUnits">0</td>
+                        <td id="sumWaterPrice" class="val-water">0</td>
+                        <td id="sumTotalPrice" class="val-total fs-5">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 📌 นำ Web App URL ของ Apps Script มาใส่ตรงนี้
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
+
+    let rawHeaders = [];
+    let rawRows = [];
+
+    // ฟังก์ชันโหลดข้อมูลตอนเปิดหน้าเว็บ
+    async function fetchUsageData() {
+        try {
+            const response = await fetch(WEB_APP_URL + "?action=getUsageData");
+            const res = await response.json();
+
+            if (res.status === 'success') {
+                rawHeaders = res.headers;
+                rawRows = res.rows;
+                setupMonthSelector();
+            } else {
+                alert("เกิดข้อผิดพลาด: " + res.message);
+            }
+        } catch (error) {
+            alert("ไม่สามารถดึงข้อมูลได้: " + error.message);
+        }
+    }
+
+    // ตั้งค่า Dropdown ให้เดือนล่าสุดขึ้นก่อน
+    function setupMonthSelector() {
+        const monthSelect = document.getElementById('monthSelect');
+        monthSelect.innerHTML = '';
+        
+        // ข้ามคอลัมน์แรกๆ (ID, no, meter, customer) ดึงเฉพาะเดือน
+        let availableMonths = [];
+        for (let i = 4; i < rawHeaders.length; i++) {
+            if (rawHeaders[i] && String(rawHeaders[i]).trim() !== '') {
+                availableMonths.push({ name: rawHeaders[i], index: i });
+            }
+        }
+
+        // กลับลำดับให้เดือนล่าสุด (คอลัมน์ขวาสุด) ขึ้นบนสุด
+        availableMonths.reverse();
+
+        availableMonths.forEach(m => {
+            let option = document.createElement('option');
+            option.value = m.index;
+            option.text = m.name;
+            monthSelect.appendChild(option);
+        });
+
+        monthSelect.disabled = false;
+        
+        // ถ้ามีเดือนให้เลือก ให้แสดงข้อมูลเดือนล่าสุดทันที
+        if(availableMonths.length > 0) {
+            renderDashboard();
+        } else {
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="text-center text-muted">ยังไม่มีข้อมูลคอลัมน์เดือนในชีต</td></tr>`;
+        }
+    }
+
+    // ฟังก์ชันคำนวณและแสดงตาราง
+    function renderDashboard() {
+        const colIndex = parseInt(document.getElementById('monthSelect').value);
+        if (isNaN(colIndex)) return;
+
+        let euRate = 0;
+        let wuRate = 0;
+        const customerData = {};
+
+        // 1. หาเรท EU และ WU และ รวบรวมข้อมูลตามชื่อลูกค้า
+        rawRows.forEach(row => {
+            const id = String(row[0] || '').trim().toUpperCase();
+            const customerName = String(row[3] || '').trim();
+            const usageValue = Number(row[colIndex]) || 0;
+
+            // เก็บค่าเรท
+            if (id === 'EU') euRate = usageValue;
+            if (id === 'WU') wuRate = usageValue;
+
+            // รวบรวมข้อมูลลูกค้า (ข้าม row ที่ไม่มีชื่อ หรือเป็นค่าเรท)
+            if (customerName !== '' && id !== 'EU' && id !== 'WU') {
+                if (!customerData[customerName]) {
+                    customerData[customerName] = { elecUnits: 0, waterUnits: 0 };
+                }
+                
+                if (id.startsWith('E')) {
+                    customerData[customerName].elecUnits += usageValue;
+                } else if (id.startsWith('W')) {
+                    customerData[customerName].waterUnits += usageValue;
+                }
+            }
+        });
+
+        // แสดงผลเรทบนหน้าจอ
+        document.getElementById('euRate').innerText = euRate.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('wuRate').innerText = wuRate.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('rateInfo').style.display = 'block';
+
+        // 2. สร้างตารางและคำนวณเงิน
+        let tbodyHTML = '';
+        let sums = { eUnits: 0, ePrice: 0, wUnits: 0, wPrice: 0, total: 0 };
+
+        // เรียงตามชื่อลูกค้า ก-ฮ
+        const sortedCustomers = Object.keys(customerData).sort();
+
+        sortedCustomers.forEach(cust => {
+            const data = customerData[cust];
+            const ePrice = data.elecUnits * euRate;
+            const wPrice = data.waterUnits * wuRate;
+            const totalPrice = ePrice + wPrice;
+
+            // บวกเข้ายอดรวม
+            sums.eUnits += data.elecUnits;
+            sums.ePrice += ePrice;
+            sums.wUnits += data.waterUnits;
+            sums.wPrice += wPrice;
+            sums.total += totalPrice;
+
+            tbodyHTML += `
+                <tr>
+                    <td class="text-start fw-bold">${cust}</td>
+                    <td>${data.elecUnits > 0 ? data.elecUnits.toLocaleString() : '-'}</td>
+                    <td class="val-elec">${ePrice > 0 ? ePrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
+                    <td>${data.waterUnits > 0 ? data.waterUnits.toLocaleString() : '-'}</td>
+                    <td class="val-water">${wPrice > 0 ? wPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
+                    <td class="val-total bg-light">${totalPrice > 0 ? totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2}) : '-'}</td>
+                </tr>
+            `;
+        });
+
+        if (sortedCustomers.length === 0) {
+            tbodyHTML = `<tr><td colspan="6" class="text-center py-4">ไม่มีข้อมูลการใช้งานในเดือนนี้</td></tr>`;
+            document.getElementById('tableFoot').style.display = 'none';
+        } else {
+            // อัปเดต Footer ยอดรวม
+            document.getElementById('sumElecUnits').innerText = sums.eUnits.toLocaleString();
+            document.getElementById('sumElecPrice').innerText = sums.ePrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('sumWaterUnits').innerText = sums.wUnits.toLocaleString();
+            document.getElementById('sumWaterPrice').innerText = sums.wPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('sumTotalPrice').innerText = sums.total.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('tableFoot').style.display = 'table-footer-group';
+        }
+
+        document.getElementById('tableBody').innerHTML = tbodyHTML;
+    }
+
+    // เริ่มทำงาน
+    window.onload = fetchUsageData;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
