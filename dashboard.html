@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard ค่าไฟ-ค่าน้ำ คลอง 3</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 Dashboard สรุปค่าใช้จ่าย Klong3</h2>
+    <h2 class="mb-4 text-primary">📊 สรุปค่าใช้จ่าย Klong3</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -150,20 +150,57 @@
         renderDashboard();
     }
 
-    // 📌 ปรับปรุงใหม่: ฟังก์ชันวิเคราะห์วันที่จากหัวคอลัมน์ klong3Data ให้แม่นยำขึ้น
+    // 📌 สุดยอดฟังก์ชันแปลงวันที่ แกะข้อมูลได้ทุกรูปแบบ
     function parseMeterHeader(str) {
         str = String(str).trim();
-        // กรณี ISO Date (2025-12-20...)
-        if (str.includes('T') && str.includes('-')) {
-            let d = new Date(str);
-            return { m: d.getMonth() + 1, y: d.getFullYear() + 543 };
+        let m = 0, y = 0;
+
+        // 1. ตรวจสอบรูปแบบ ISO Date (เช่น 2025-12-20T...)
+        let isoMatch = str.match(/^(\d{4})-(\d{2})-\d{2}T/);
+        if (isoMatch) {
+            y = parseInt(isoMatch[1], 10);
+            m = parseInt(isoMatch[2], 10);
         }
-        // กรณี DD/MM/YYYY
-        if (str.includes('/')) {
+        // 2. ตรวจสอบรูปแบบเครื่องหมายทับ (เช่น 20/12/2568, 12/68)
+        else if (str.includes('/')) {
             let p = str.split('/');
-            let m = parseInt(p[1]);
-            let y = parseInt(p[2]);
-            if (y < 2500) y += 543; // แปลง ค.ศ. เป็น พ.ศ.
+            if (p.length === 3) {
+                m = parseInt(p[1], 10);
+                y = parseInt(p[2], 10);
+            } else if (p.length === 2) {
+                m = parseInt(p[0], 10);
+                y = parseInt(p[1], 10);
+            }
+        }
+        // 3. ตรวจสอบรูปแบบภาษาไทย (เช่น ธันวาคม 68)
+        else {
+            const monthsMap = {
+                'มกราคม':1,'ม.ค.':1,'มค':1, 'กุมภาพันธ์':2,'ก.พ.':2,'กพ':2,
+                'มีนาคม':3,'มี.ค.':3,'มีค':3, 'เมษายน':4,'เม.ย.':4,'เมย':4,
+                'พฤษภาคม':5,'พ.ค.':5,'พค':5, 'มิถุนายน':6,'มิ.ย.':6,'มิย':6,
+                'กรกฎาคม':7,'ก.ค.':7,'กค':7, 'สิงหาคม':8,'ส.ค.':8,'สค':8,
+                'กันยายน':9,'ก.ย.':9,'กย':9, 'ตุลาคม':10,'ต.ค.':10,'ตค':10,
+                'พฤศจิกายน':11,'พ.ย.':11,'พย':11, 'ธันวาคม':12,'ธ.ค.':12,'ธค':12
+            };
+            let yStr = str.replace(/\s+/g, '');
+            let monthKeys = Object.keys(monthsMap).sort((a,b) => b.length - a.length);
+            for (let key of monthKeys) {
+                if (yStr.includes(key)) {
+                    m = monthsMap[key];
+                    let yearMatch = yStr.replace(key, '').match(/\d+/);
+                    if (yearMatch) y = parseInt(yearMatch[0], 10);
+                    break;
+                }
+            }
+        }
+
+        // ปรับมาตรฐานให้เป็น ปี พ.ศ. 4 หลักเสมอ
+        if (y > 0) {
+            if (y < 100) y += 2500; // แปลง 68 เป็น 2568
+            else if (y < 2500) y += 543; // แปลง 2025 เป็น 2568
+        }
+
+        if (m >= 1 && m <= 12 && y >= 2500) {
             return { m: m, y: y };
         }
         return null;
@@ -174,26 +211,22 @@
         if (isNaN(colIdx)) return;
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
         
-        // 1. หา เดือน/ปี จากชื่อที่เลือกใน Dashboard (เช่น ธันวาคม 68)
-        const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-        let targetM = 0, targetY = 0;
-        
-        thaiMonths.forEach((mName, i) => {
-            if (selectedMonthName.includes(mName)) targetM = i + 1;
-        });
-        let yearMatch = selectedMonthName.match(/\d+/);
-        if (yearMatch) {
-            targetY = parseInt(yearMatch[0]);
-            if (targetY < 2500) targetY += 2500;
+        // 1. วิเคราะห์เดือนและปี จากหัวข้อ Dashboard (Usage)
+        let targetDate = parseMeterHeader(selectedMonthName);
+        if (!targetDate) {
+            console.error("ไม่สามารถวิเคราะห์เดือนจากชื่อ: " + selectedMonthName);
+            return;
         }
+        let targetM = targetDate.m;
+        let targetY = targetDate.y;
 
-        // 2. ค้นหาคอลัมน์ในชีตมิเตอร์ที่ตรงกับ เดือน/ปี นี้
+        // 2. ค้นหาคอลัมน์ในชีต Klong3Data ที่ตรงกัน
         let mColIdx = meterData.headers.findIndex(h => {
             let p = parseMeterHeader(h);
             return p && p.m === targetM && p.y === targetY;
         });
 
-        // 3. เตรียมชื่อเดือนสำหรับการแสดงผลในบิล (ก่อน-หลัง)
+        // 3. เตรียม Label สำหรับแสดงในบิล
         let currLabel = `${shortMonths[targetM-1]} ${String(targetY).slice(-2)}`;
         let prevM = targetM - 1, prevY = targetY;
         if (prevM === 0) { prevM = 12; prevY--; }
@@ -217,11 +250,13 @@
                 if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', meters: [] };
                 
                 let meterInfo = { id: id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '' };
+                
+                // ดึงตัวเลขจาก Klong3Data
                 if (mColIdx !== -1) {
                     const mRow = meterData.rows.find(r => String(r[0] || '').trim().toUpperCase() === id);
                     if (mRow) {
                         meterInfo.c = mRow[mColIdx] !== "" ? Number(mRow[mColIdx]) : 0;
-                        meterInfo.p = (mColIdx > 0) ? Number(mRow[mColIdx - 1]) : 0;
+                        meterInfo.p = (mColIdx > 0 && mRow[mColIdx - 1] !== "") ? Number(mRow[mColIdx - 1]) : 0;
                     }
                 }
 
