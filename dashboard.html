@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V1.14</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V1.15</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V1.14</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V1.15</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -154,13 +154,16 @@
     }
 
 function renderDashboard() {
-        const colIdx = parseInt(document.getElementById('monthSelect').value);
-        selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
-        
+        const selectElem = document.getElementById('monthSelect');
+        const colIdx = parseInt(selectElem.value);
+        if (isNaN(colIdx)) return;
+
+        selectedMonthName = selectElem.options[selectElem.selectedIndex].text;
         const monthHeader = usageData.headers[colIdx];
         
-        // 📌 ระบบ AI แปลงชื่อเดือน (รองรับทั้งชื่อเต็มและชื่อย่อ)
-        let mColIdx = -1;
+        // 📌 1. แปลงชื่อเดือนจาก Usage (มกราคม 68) เป็นตัวเลขเดือน (1)
+        let mNum = "";
+        let yStr = monthHeader.replace(/\s+/g, ''); 
         const monthsMap = {
             'มกราคม': '1', 'ม.ค.': '1', 'มค': '1',
             'กุมภาพันธ์': '2', 'ก.พ.': '2', 'กพ': '2',
@@ -176,36 +179,35 @@ function renderDashboard() {
             'ธันวาคม': '12', 'ธ.ค.': '12', 'ธค': '12'
         };
         
-        let mNum = "";
-        let yStr = monthHeader.replace(/\s+/g, ''); // ตัดช่องว่างทิ้งทั้งหมด เช่น "มีนาคม 69" -> "มีนาคม69"
-        
-        // เรียงคำค้นหาจากยาวไปสั้น เพื่อให้จับคำว่า "มีนาคม" ก่อนคำว่า "มีค"
         const monthKeys = Object.keys(monthsMap).sort((a, b) => b.length - a.length);
-        
         for(let key of monthKeys) {
             if(yStr.includes(key)) {
                 mNum = monthsMap[key];
-                yStr = yStr.replace(key, '');
+                yStr = yStr.replace(key, '').replace(/[^0-9]/g, '');
+                if(yStr.length === 2) yStr = "25" + yStr;
                 break;
             }
         }
-        
+
+        // 📌 2. ค้นหาคอลัมน์ในชีต Klong3Data แบบแม่นยำ (Exact Segment Match)
+        let mColIdx = -1;
         if (mNum !== "") {
-            yStr = yStr.replace(/[^0-9]/g, ''); // ดึงมาแค่ตัวเลขปี
-            if(yStr.length === 2) yStr = "25" + yStr; // แปลง 69 เป็น 2569
-            
-            // ค้นหาในชีตมิเตอร์ว่ามีคอลัมน์ที่ลงท้ายด้วย /เดือน/ปี หรือไม่ (เช่น /3/2569 หรือ /3/69)
             mColIdx = meterData.headers.findIndex(h => {
-                const sh = String(h).trim();
-                return sh.includes(`/${mNum}/${yStr}`) || sh.includes(`/${mNum}/${yStr.slice(-2)}`);
+                const parts = String(h).trim().split('/'); // แยก 20/10/2568 ออกเป็น [20, 10, 2568]
+                if (parts.length < 3) return false;
+                
+                const hMonth = String(parts[1]); // เลขเดือนในชีตมิเตอร์
+                const hYear = String(parts[2]);  // เลขปีในชีตมิเตอร์
+                
+                // เช็กเดือนต้องตรงกันเป๊ะ และปีต้องตรงกัน (รองรับทั้ง 68 และ 2568)
+                return hMonth === mNum && (hYear === yStr || hYear === yStr.slice(-2));
             });
         }
 
-        // ถ้าแปลชื่อเดือนแล้วยังหาไม่เจอ ให้ใช้ลำดับคอลัมน์เดียวกันเป็นแผนสำรอง
-        if (mColIdx === -1) {
-            mColIdx = colIdx;
-        }
+        // ถ้าหาไม่เจอจริงๆ ให้ใช้ลำดับคอลัมน์เดียวกัน (Backup plan)
+        if (mColIdx === -1) mColIdx = colIdx;
 
+        // --- ส่วนการประมวลผลข้อมูลอื่นๆ (เหมือนเดิม แต่ใช้ mColIdx ที่แม่นยำแล้ว) ---
         const cfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'commonfee');
         const sfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'signfee');
         const adIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'address');
@@ -248,10 +250,12 @@ function renderDashboard() {
             }
         });
 
+        // แสดงผลเรท
         document.getElementById('euRate').innerText = eu;
         document.getElementById('wuRate').innerText = wu;
         document.getElementById('rateInfo').style.display = 'block';
 
+        // วาดตาราง Dashboard
         let html = '', s = { eu:0, ep:0, wu:0, wp:0, cf:0, sf:0, tt:0 };
         printStore = custs;
 
@@ -259,18 +263,17 @@ function renderDashboard() {
             const d = custs[n];
             const ep = d.eU * eu, wp = d.wU * wu, tt = ep + wp + d.cf + d.sf;
             d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
-            
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
-            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-fee">${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-fee">${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-total">${tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
+            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td>${d.cf.toLocaleString()}</td><td>${d.sf.toLocaleString()}</td><td class="val-total">${tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
         });
 
         document.getElementById('tableBody').innerHTML = html;
-        ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{minimumFractionDigits: (i===0||i===2)?0:2}));
+        ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{minimumFractionDigits: (i===0||i===2||i===4||i===5)?0:2}));
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
-
-    function openPrint(name) {
+	
+	function openPrint(name) {
         const d = printStore[name];
         const vat = d.tt * 0.07, gTotal = d.tt + vat;
         document.getElementById('inv-cust').innerText = name;
