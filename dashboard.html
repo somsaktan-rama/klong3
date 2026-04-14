@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.21</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.21</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -59,7 +59,6 @@
                     <tr>
                         <th class="text-start">Customer</th>
                         <th>ไฟ(หน่วย)</th>
-                        <th>Xfactor</th>
                         <th>ค่าไฟ</th>
                         <th>น้ำ(หน่วย)</th>
                         <th>ค่าน้ำ</th>
@@ -73,11 +72,8 @@
                 <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
                     <tr>
                         <td class="text-end">รวม:</td>
-                        <td id="sumElecUnits">0</td>
-                        <td>-</td>
-                        <td id="sumElecPrice" class="val-elec">0</td>
-                        <td id="sumWaterUnits">0</td>
-                        <td id="sumWaterPrice" class="val-water">0</td>
+                        <td id="sumElecUnits">0</td><td id="sumElecPrice" class="val-elec">0</td>
+                        <td id="sumWaterUnits">0</td><td id="sumWaterPrice" class="val-water">0</td>
                         <td id="sumCommonFee">0</td><td id="sumSignFee">0</td>
                         <td id="sumTotalPrice" class="val-total">0</td>
                         <td></td>
@@ -107,7 +103,7 @@
         <div class="text-start"><strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br><strong>วันที่:</strong> <span id="inv-date">-</span></div>
     </div>
     <table class="inv-table">
-        <thead><tr><th class="text-left">รายการ</th><th>หน่วย x ตัวคูณ</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
+        <thead><tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
         <tbody id="inv-tbody"></tbody>
     </table>
     <div class="note-section">
@@ -148,7 +144,7 @@
         sel.innerHTML = '';
         let months = [];
         usageData.headers.forEach((h, i) => {
-            // เริ่มต้นที่ Index 5 (คอลัมน์ F) เพราะ Index 4 (คอลัมน์ E) คือ Xfactor
+            // ยังคงข้าม Index 4 (Xfactor) เพื่อไม่ให้เป็นตัวเลือกเดือน
             if (i >= 5 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
                 months.push({ name: h, idx: i });
             }
@@ -214,7 +210,7 @@
             const id = String(row[0] || '').toUpperCase().trim();
             const name = String(row[3] || '').trim();
             const val = Number(row[colIdx]) || 0;
-            const xf = Number(row[4]) || 1; // ดึง Xfactor จากคอลัมน์ E (Index 4)
+            const xf = Number(row[4]) || 1; // ดึง Xfactor มาเก็บไว้ก่อน
 
             if (id === 'EU') eu = val; 
             else if (id === 'WU') wu = val;
@@ -255,9 +251,8 @@
 
         Object.keys(custs).sort().forEach(n => {
             const d = custs[n];
-            // คำนวณโดยคูณ Xfactor
-            const ep = d.eU * eu * d.xf; 
-            const wp = d.wU * wu * d.xf;
+            const ep = d.eU * eu; 
+            const wp = d.wU * wu;
             const tt = ep + wp + d.cf + d.sf;
             d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
             
@@ -266,7 +261,6 @@
             html += `<tr>
                 <td class="text-start fw-bold">${n}</td>
                 <td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                <td>x ${d.xf}</td>
                 <td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
                 <td>${d.wU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                 <td class="val-water">${wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -280,7 +274,7 @@
         document.getElementById('tableBody').innerHTML = html;
         ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>
             document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{
-                minimumFractionDigits: (i===0||i===4) ? 0 : 2,
+                minimumFractionDigits: (i===0||i===2) ? 0 : 2,
                 maximumFractionDigits: 2
             })
         );
@@ -295,17 +289,19 @@
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
-        // แสดงรายละเอียดเลขมิเตอร์และตัวคูณ (Xfactor)
+        // 📌 เฉพาะมิเตอร์ไฟฟ้า (E): นำค่า ก่อน-หลัง มาคูณกับ Xfactor ที่ดึงมา
         let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => 
-            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>) x ตัวคูณ <b>${d.xf}</b></small>`
+            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${(m.p * d.xf).toLocaleString()}</b> - ${m.cLabel}: <b>${(m.c * d.xf).toLocaleString()}</b>)</small>`
         ).join('');
+        
+        // 📌 ส่วนมิเตอร์น้ำ (W): แสดงเลขมิเตอร์ปกติ ไม่คูณ Xfactor
         let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => 
-            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>) x ตัวคูณ <b>${d.xf}</b></small>`
+            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>)</small>`
         ).join('');
 
         document.getElementById('inv-tbody').innerHTML = `
-            <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${(d.eU * d.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr><td class="text-left">2. ค่าน้ำประปา ${meterLinesW}</td><td>${(d.wU * d.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">2. ค่าน้ำประปา ${meterLinesW}</td><td>${d.wU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษี</td><td>${d.tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
@@ -319,7 +315,7 @@
     }
 
     function closePrintView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.21";
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
