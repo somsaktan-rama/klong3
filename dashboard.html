@@ -153,12 +153,58 @@
         renderDashboard();
     }
 
-    function renderDashboard() {
+function renderDashboard() {
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
         
         const monthHeader = usageData.headers[colIdx];
-        const mColIdx = meterData.headers.indexOf(monthHeader);
+        
+        // 📌 ระบบ AI แปลงชื่อเดือน (รองรับทั้งชื่อเต็มและชื่อย่อ)
+        let mColIdx = -1;
+        const monthsMap = {
+            'มกราคม': '1', 'ม.ค.': '1', 'มค': '1',
+            'กุมภาพันธ์': '2', 'ก.พ.': '2', 'กพ': '2',
+            'มีนาคม': '3', 'มี.ค.': '3', 'มีค': '3',
+            'เมษายน': '4', 'เม.ย.': '4', 'เมย': '4',
+            'พฤษภาคม': '5', 'พ.ค.': '5', 'พค': '5',
+            'มิถุนายน': '6', 'มิ.ย.': '6', 'มิย': '6',
+            'กรกฎาคม': '7', 'ก.ค.': '7', 'กค': '7',
+            'สิงหาคม': '8', 'ส.ค.': '8', 'สค': '8',
+            'กันยายน': '9', 'ก.ย.': '9', 'กย': '9',
+            'ตุลาคม': '10', 'ต.ค.': '10', 'ตค': '10',
+            'พฤศจิกายน': '11', 'พ.ย.': '11', 'พย': '11',
+            'ธันวาคม': '12', 'ธ.ค.': '12', 'ธค': '12'
+        };
+        
+        let mNum = "";
+        let yStr = monthHeader.replace(/\s+/g, ''); // ตัดช่องว่างทิ้งทั้งหมด เช่น "มีนาคม 69" -> "มีนาคม69"
+        
+        // เรียงคำค้นหาจากยาวไปสั้น เพื่อให้จับคำว่า "มีนาคม" ก่อนคำว่า "มีค"
+        const monthKeys = Object.keys(monthsMap).sort((a, b) => b.length - a.length);
+        
+        for(let key of monthKeys) {
+            if(yStr.includes(key)) {
+                mNum = monthsMap[key];
+                yStr = yStr.replace(key, '');
+                break;
+            }
+        }
+        
+        if (mNum !== "") {
+            yStr = yStr.replace(/[^0-9]/g, ''); // ดึงมาแค่ตัวเลขปี
+            if(yStr.length === 2) yStr = "25" + yStr; // แปลง 69 เป็น 2569
+            
+            // ค้นหาในชีตมิเตอร์ว่ามีคอลัมน์ที่ลงท้ายด้วย /เดือน/ปี หรือไม่ (เช่น /3/2569 หรือ /3/69)
+            mColIdx = meterData.headers.findIndex(h => {
+                const sh = String(h).trim();
+                return sh.includes(`/${mNum}/${yStr}`) || sh.includes(`/${mNum}/${yStr.slice(-2)}`);
+            });
+        }
+
+        // ถ้าแปลชื่อเดือนแล้วยังหาไม่เจอ ให้ใช้ลำดับคอลัมน์เดียวกันเป็นแผนสำรอง
+        if (mColIdx === -1) {
+            mColIdx = colIdx;
+        }
 
         const cfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'commonfee');
         const sfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'signfee');
@@ -181,8 +227,8 @@
                 if (mColIdx > 0) {
                     const mRow = meterData.rows.find(r => String(r[0]).trim().toUpperCase() === id);
                     if (mRow) {
-                        meterInfo.c = mRow[mColIdx] || 0;
-                        meterInfo.p = mRow[mColIdx - 1] || 0;
+                        meterInfo.c = Number(mRow[mColIdx]) || 0;
+                        meterInfo.p = Number(mRow[mColIdx - 1]) || 0;
                     }
                 }
 
@@ -216,11 +262,11 @@
             
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
-            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString()}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString()}</td><td>${d.cf}</td><td>${d.sf}</td><td class="val-total">${tt.toLocaleString()}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
+            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-fee">${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-fee">${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td class="val-total">${tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
         });
 
         document.getElementById('tableBody').innerHTML = html;
-        ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>document.getElementById(id).innerText = Object.values(s)[i].toLocaleString());
+        ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{minimumFractionDigits: (i===0||i===2)?0:2}));
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
