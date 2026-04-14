@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.19</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.19</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -59,6 +59,7 @@
                     <tr>
                         <th class="text-start">Customer</th>
                         <th>ไฟ(หน่วย)</th>
+                        <th>Xfactor</th>
                         <th>ค่าไฟ</th>
                         <th>น้ำ(หน่วย)</th>
                         <th>ค่าน้ำ</th>
@@ -72,8 +73,11 @@
                 <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
                     <tr>
                         <td class="text-end">รวม:</td>
-                        <td id="sumElecUnits">0</td><td id="sumElecPrice" class="val-elec">0</td>
-                        <td id="sumWaterUnits">0</td><td id="sumWaterPrice" class="val-water">0</td>
+                        <td id="sumElecUnits">0</td>
+                        <td>-</td>
+                        <td id="sumElecPrice" class="val-elec">0</td>
+                        <td id="sumWaterUnits">0</td>
+                        <td id="sumWaterPrice" class="val-water">0</td>
                         <td id="sumCommonFee">0</td><td id="sumSignFee">0</td>
                         <td id="sumTotalPrice" class="val-total">0</td>
                         <td></td>
@@ -103,7 +107,7 @@
         <div class="text-start"><strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br><strong>วันที่:</strong> <span id="inv-date">-</span></div>
     </div>
     <table class="inv-table">
-        <thead><tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
+        <thead><tr><th class="text-left">รายการ</th><th>หน่วย x ตัวคูณ</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
         <tbody id="inv-tbody"></tbody>
     </table>
     <div class="note-section">
@@ -122,7 +126,6 @@
     let meterData = { headers: [], rows: [] };
     let printStore = {}; 
     let selectedMonthName = "";
-    
     const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
     async function fetchAll() {
@@ -145,7 +148,8 @@
         sel.innerHTML = '';
         let months = [];
         usageData.headers.forEach((h, i) => {
-            if (i >= 4 && h && !['commonfee', 'signfee', 'address'].includes(h.toLowerCase())) {
+            // เริ่มต้นที่ Index 5 (คอลัมน์ F) เพราะ Index 4 (คอลัมน์ E) คือ Xfactor
+            if (i >= 5 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
                 months.push({ name: h, idx: i });
             }
         });
@@ -154,41 +158,19 @@
         renderDashboard();
     }
 
-    // 📌 สุดยอดฟังก์ชันแปลงวันที่ แกะข้อมูลได้ทุกรูปแบบ
     function parseMeterHeader(str) {
         str = String(str).trim();
         let m = 0, y = 0;
-
-        // 1. ตรวจสอบรูปแบบ ISO Date (เช่น 2025-12-20T...)
         let isoMatch = str.match(/^(\d{4})-(\d{2})-\d{2}T/);
-        if (isoMatch) {
-            y = parseInt(isoMatch[1], 10);
-            m = parseInt(isoMatch[2], 10);
-        }
-        // 2. ตรวจสอบรูปแบบเครื่องหมายทับ (เช่น 20/12/2568, 12/68)
+        if (isoMatch) { y = parseInt(isoMatch[1], 10); m = parseInt(isoMatch[2], 10); }
         else if (str.includes('/')) {
             let p = str.split('/');
-            if (p.length === 3) {
-                m = parseInt(p[1], 10);
-                y = parseInt(p[2], 10);
-            } else if (p.length === 2) {
-                m = parseInt(p[0], 10);
-                y = parseInt(p[1], 10);
-            }
-        }
-        // 3. ตรวจสอบรูปแบบภาษาไทย (เช่น ธันวาคม 68)
-        else {
-            const monthsMap = {
-                'มกราคม':1,'ม.ค.':1,'มค':1, 'กุมภาพันธ์':2,'ก.พ.':2,'กพ':2,
-                'มีนาคม':3,'มี.ค.':3,'มีค':3, 'เมษายน':4,'เม.ย.':4,'เมย':4,
-                'พฤษภาคม':5,'พ.ค.':5,'พค':5, 'มิถุนายน':6,'มิ.ย.':6,'มิย':6,
-                'กรกฎาคม':7,'ก.ค.':7,'กค':7, 'สิงหาคม':8,'ส.ค.':8,'สค':8,
-                'กันยายน':9,'ก.ย.':9,'กย':9, 'ตุลาคม':10,'ต.ค.':10,'ตค':10,
-                'พฤศจิกายน':11,'พ.ย.':11,'พย':11, 'ธันวาคม':12,'ธ.ค.':12,'ธค':12
-            };
+            if (p.length === 3) { m = parseInt(p[1], 10); y = parseInt(p[2], 10); }
+            else if (p.length === 2) { m = parseInt(p[0], 10); y = parseInt(p[1], 10); }
+        } else {
+            const monthsMap = {'มกราคม':1,'ม.ค.':1,'มค':1,'กุมภาพันธ์':2,'กพ':2,'มีนาคม':3,'มีค':3,'เมษายน':4,'เมย':4,'พฤษภาคม':5,'พค':5,'มิถุนายน':6,'มิย':6,'กรกฎาคม':7,'กค':7,'สิงหาคม':8,'สค':8,'กันยายน':9,'กย':9,'ตุลาคม':10,'ตค':10,'พฤศจิกายน':11,'พย':11,'ธันวาคม':12,'ธค':12};
             let yStr = str.replace(/\s+/g, '');
-            let monthKeys = Object.keys(monthsMap).sort((a,b) => b.length - a.length);
-            for (let key of monthKeys) {
+            for (let key in monthsMap) {
                 if (yStr.includes(key)) {
                     m = monthsMap[key];
                     let yearMatch = yStr.replace(key, '').match(/\d+/);
@@ -197,41 +179,29 @@
                 }
             }
         }
-
-        // ปรับมาตรฐานให้เป็น ปี พ.ศ. 4 หลักเสมอ
-        if (y > 0) {
-            if (y < 100) y += 2500; // แปลง 68 เป็น 2568
-            else if (y < 2500) y += 543; // แปลง 2025 เป็น 2568
-        }
-
-        if (m >= 1 && m <= 12 && y >= 2500) {
-            return { m: m, y: y };
-        }
-        return null;
+        if (y > 0) { if (y < 100) y += 2500; else if (y < 2500) y += 543; }
+        return (m >= 1 && m <= 12 && y >= 2500) ? { m, y } : null;
     }
 
-function renderDashboard() {
+    function renderDashboard() {
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         if (isNaN(colIdx)) return;
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
         
         let targetDate = parseMeterHeader(selectedMonthName);
-        if (!targetDate) {
-            console.error("ไม่สามารถวิเคราะห์เดือนจากชื่อ: " + selectedMonthName);
-            return;
+        let mColIdx = -1;
+        let currLabel = "", prevLabel = "";
+
+        if (targetDate) {
+            mColIdx = meterData.headers.findIndex(h => {
+                let p = parseMeterHeader(h);
+                return p && p.m === targetDate.m && p.y === targetDate.y;
+            });
+            currLabel = `${shortMonths[targetDate.m-1]} ${String(targetDate.y).slice(-2)}`;
+            let pm = targetDate.m - 1, py = targetDate.y;
+            if (pm === 0) { pm = 12; py--; }
+            prevLabel = `${shortMonths[pm-1]} ${String(py).slice(-2)}`;
         }
-        let targetM = targetDate.m;
-        let targetY = targetDate.y;
-
-        let mColIdx = meterData.headers.findIndex(h => {
-            let p = parseMeterHeader(h);
-            return p && p.m === targetM && p.y === targetY;
-        });
-
-        let currLabel = `${shortMonths[targetM-1]} ${String(targetY).slice(-2)}`;
-        let prevM = targetM - 1, prevY = targetY;
-        if (prevM === 0) { prevM = 12; prevY--; }
-        let prevLabel = `${shortMonths[prevM-1]} ${String(prevY).slice(-2)}`;
 
         const cfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'commonfee');
         const sfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'signfee');
@@ -244,14 +214,14 @@ function renderDashboard() {
             const id = String(row[0] || '').toUpperCase().trim();
             const name = String(row[3] || '').trim();
             const val = Number(row[colIdx]) || 0;
+            const xf = Number(row[4]) || 1; // ดึง Xfactor จากคอลัมน์ E (Index 4)
 
             if (id === 'EU') eu = val; 
             else if (id === 'WU') wu = val;
             else if (name && id !== 'EU' && id !== 'WU') {
-                if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', meters: [] };
+                if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', xf: xf, meters: [] };
                 
-                let meterInfo = { id: id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '' };
-                
+                let meterInfo = { id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '' };
                 if (mColIdx !== -1) {
                     const mRow = meterData.rows.find(r => String(r[0] || '').trim().toUpperCase() === id);
                     if (mRow) {
@@ -285,14 +255,18 @@ function renderDashboard() {
 
         Object.keys(custs).sort().forEach(n => {
             const d = custs[n];
-            const ep = d.eU * eu, wp = d.wU * wu, tt = ep + wp + d.cf + d.sf;
+            // คำนวณโดยคูณ Xfactor
+            const ep = d.eU * eu * d.xf; 
+            const wp = d.wU * wu * d.xf;
+            const tt = ep + wp + d.cf + d.sf;
             d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
+            
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
-            // 📌 แก้ไขส่วนการแสดงผล d.eU และ d.wU ให้ปัดเศษและใส่ลูกน้ำ
             html += `<tr>
                 <td class="text-start fw-bold">${n}</td>
                 <td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                <td>x ${d.xf}</td>
                 <td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
                 <td>${d.wU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                 <td class="val-water">${wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -306,7 +280,7 @@ function renderDashboard() {
         document.getElementById('tableBody').innerHTML = html;
         ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>
             document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{
-                minimumFractionDigits: (i===0||i===2) ? 0 : 2,
+                minimumFractionDigits: (i===0||i===4) ? 0 : 2,
                 maximumFractionDigits: 2
             })
         );
@@ -321,13 +295,17 @@ function renderDashboard() {
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
-        let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>)</small>`).join('');
-        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>)</small>`).join('');
+        // แสดงรายละเอียดเลขมิเตอร์และตัวคูณ (Xfactor)
+        let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => 
+            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>) x ตัวคูณ <b>${d.xf}</b></small>`
+        ).join('');
+        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => 
+            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString()}</b> - ${m.cLabel}: <b>${m.c.toLocaleString()}</b>) x ตัวคูณ <b>${d.xf}</b></small>`
+        ).join('');
 
-        // 📌 แก้ไขส่วนการแสดงผลหน่วยไฟและน้ำในบิล ให้ตัดทศนิยมเกินเช่นกัน
         document.getElementById('inv-tbody').innerHTML = `
-            <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr><td class="text-left">2. ค่าน้ำประปา ${meterLinesW}</td><td>${d.wU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${(d.eU * d.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">2. ค่าน้ำประปา ${meterLinesW}</td><td>${(d.wU * d.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษี</td><td>${d.tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
@@ -341,7 +319,7 @@ function renderDashboard() {
     }
 
     function closePrintView() {
-        document.title = "Dashboard ค่าไฟ-ค่าน้ำ คลอง 3";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.20";
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
