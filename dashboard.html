@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.22</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.22</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -144,7 +144,8 @@
         sel.innerHTML = '';
         let months = [];
         usageData.headers.forEach((h, i) => {
-            if (i >= 5 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
+            // ดึงคอลัมน์เดือน (ข้ามคอลัมน์ CommonFee, SignFee ฯลฯ)
+            if (i >= 4 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
                 months.push({ name: h, idx: i });
             }
         });
@@ -209,21 +210,22 @@
             const id = String(row[0] || '').toUpperCase().trim();
             const name = String(row[3] || '').trim();
             const val = Number(row[colIdx]) || 0;
-            const xf = Number(row[4]) || 1; // 📌 ดึง Xfactor จากคอลัมน์ E (Index 4)
 
             if (id === 'EU') eu = val; 
             else if (id === 'WU') wu = val;
             else if (name && id !== 'EU' && id !== 'WU') {
                 if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', meters: [] };
                 
-                // 📌 เก็บค่า Xfactor ไว้ในมิเตอร์แต่ละตัวแยกกัน
-                let meterInfo = { id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '', xf: xf };
+                let meterInfo = { id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '', xf: 1 };
                 
                 if (mColIdx !== -1) {
                     const mRow = meterData.rows.find(r => String(r[0] || '').trim().toUpperCase() === id);
                     if (mRow) {
                         meterInfo.c = mRow[mColIdx] !== "" ? Number(mRow[mColIdx]) : 0;
                         meterInfo.p = (mColIdx > 0 && mRow[mColIdx - 1] !== "") ? Number(mRow[mColIdx - 1]) : 0;
+                        
+                        // 📌 หัวใจสำคัญ: ดึง Xfactor จากชีต "Klong3Data" คอลัมน์ E (Index 4) ของมิเตอร์ตัวนี้
+                        meterInfo.xf = Number(mRow[4]) || 1; 
                     }
                 }
 
@@ -252,6 +254,7 @@
 
         Object.keys(custs).sort().forEach(n => {
             const d = custs[n];
+            // 📌 Dashboard จะคิดราคาปกติ (เพราะ Usage Sheet คือหน่วยที่คูณมาเสร็จแล้วตามที่คุณแจ้ง)
             const ep = d.eU * eu; 
             const wp = d.wU * wu;
             const tt = ep + wp + d.cf + d.sf;
@@ -290,18 +293,17 @@
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
-        // 📌 หัวใจสำคัญ: นำ m.xf (Xfactor ของแต่ละมิเตอร์) มาคูณเฉพาะตอนแสดงผล
+        // 📌 เฉพาะมิเตอร์ไฟฟ้า (E): นำค่า ก่อน-หลัง มาคูณกับ Xfactor ที่ดึงมาจาก Klong3Data
         let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => {
             const pMulti = m.p * m.xf;
             const cMulti = m.c * m.xf;
             return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
         }).join('');
         
-        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => {
-            const pMulti = m.p * m.xf;
-            const cMulti = m.c * m.xf;
-            return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
-        }).join('');
+        // 📌 ส่วนมิเตอร์น้ำ (W): แสดงเลขมิเตอร์ปกติ 
+        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => 
+            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${m.c.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`
+        ).join('');
 
         document.getElementById('inv-tbody').innerHTML = `
             <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
@@ -319,7 +321,7 @@
     }
 
     function closePrintView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.22";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23";
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
