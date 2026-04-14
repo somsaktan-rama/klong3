@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V1.13</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V1.14</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -13,45 +13,22 @@
         th { position: sticky; top: 0; background-color: #f8f9fa !important; z-index: 1; }
         .val-elec { color: #d63384; font-weight: bold; }
         .val-water { color: #0dcaf0; font-weight: bold; }
-        .val-fee { color: #fd7e14; } 
         .val-total { color: #198754; font-weight: bold; background-color: #e8f5e9 !important; }
 
-        /* --- สไตล์สำหรับใบแจ้งหนี้ (Print Area) --- */
-        #printArea {
-            display: none; 
-            background-color: white;
-            font-family: 'Sarabun', sans-serif;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .print-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #ccc;
-        }
+        #printArea { display: none; background-color: white; font-family: 'Sarabun', sans-serif; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .print-controls { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 10px;}
         .inv-header { text-align: center; margin-bottom: 15px; }
         .inv-info { display: flex; justify-content: space-between; margin: 20px 0; font-size: 14px; line-height: 1.6; }
         .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
         .inv-table th, .inv-table td { border: 1px solid #ddd; padding: 8px 10px; text-align: right; }
         .inv-table th { background: #f8f9fa; text-align: center; font-weight: bold; }
         .text-left { text-align: left !important; }
-        .bold { font-weight: bold; }
-        .total-row { background: #e8f5e9; font-size: 1.1em; }
-        .note-section {
-            margin-top: 15px;
-            padding: 10px 15px;
-            border: 1px dashed #ccc;
-            font-size: 13px;
-        }
+        .total-row { background: #e8f5e9; font-weight: bold; font-size: 1.1em; }
+        .note-section { margin-top: 15px; padding: 10px 15px; border: 1px dashed #ccc; font-size: 13px; }
         .inv-footer { margin-top: 25px; display: flex; justify-content: flex-end; }
 
-        /* --- ตั้งค่าการพิมพ์ --- */
         @media print {
-            @page { margin: 0; } /* ซ่อน URL/วันที่ ที่ขอบกระดาษ */
+            @page { margin: 0; }
             body { background-color: white; padding: 1.5cm; margin: 0; }
             #dashboardArea, .print-controls { display: none !important; }
             #printArea { display: block !important; padding: 0; max-width: 100%; }
@@ -61,18 +38,16 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 สรุปค่าใช้จ่าย Klong3 V1.13</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V1.14</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label class="form-label fw-bold">เลือกเดือนที่ต้องการดูข้อมูล</label>
-                <select id="monthSelect" class="form-select" onchange="renderDashboard()" disabled>
-                    <option value="">⏳ กำลังโหลดข้อมูล...</option>
-                </select>
+                <select id="monthSelect" class="form-select" onchange="renderDashboard()" disabled></select>
             </div>
             <div id="rateInfo" class="col-md-8 mt-3 mt-md-0 text-muted" style="display:none;">
-                <strong>เรท:</strong> ไฟ <span id="euRate" class="text-danger fw-bold">0</span> บ. | น้ำ <span id="wuRate" class="text-info fw-bold">0</span> บ.
+                <strong>เรท:</strong> ไฟ <span id="euRate" class="text-danger">0</span> | น้ำ <span id="wuRate" class="text-info">0</span>
             </div>
         </div>
     </div>
@@ -93,18 +68,13 @@
                         <th>พิมพ์</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="9" class="text-center text-muted py-4">รอโหลดข้อมูลจากระบบ...</td></tr>
-                </tbody>
+                <tbody id="tableBody"></tbody>
                 <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
                     <tr>
                         <td class="text-end">รวม:</td>
-                        <td id="sumElecUnits">0</td>
-                        <td id="sumElecPrice" class="val-elec">0</td>
-                        <td id="sumWaterUnits">0</td>
-                        <td id="sumWaterPrice" class="val-water">0</td>
-                        <td id="sumCommonFee" class="val-fee">0</td>
-                        <td id="sumSignFee" class="val-fee">0</td>
+                        <td id="sumElecUnits">0</td><td id="sumElecPrice" class="val-elec">0</td>
+                        <td id="sumWaterUnits">0</td><td id="sumWaterPrice" class="val-water">0</td>
+                        <td id="sumCommonFee">0</td><td id="sumSignFee">0</td>
                         <td id="sumTotalPrice" class="val-total">0</td>
                         <td></td>
                     </tr>
@@ -119,7 +89,6 @@
         <button class="btn btn-secondary" onclick="closePrintView()">⬅️ กลับ</button>
         <button class="btn btn-success" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
     </div>
-
                 <div class="header">
                     <div style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">ใบแจ้งหนี้</div>
                     <div style="font-size: 18px; font-weight: bold; color: #222;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
@@ -129,50 +98,30 @@
 						เลขผู้เสียภาษี 0125565020521
                     </div>
                 </div>
-
     <div class="inv-info">
-        <div>
-            <strong>ชื่อลูกค้า:</strong> <span id="inv-cust">-</span><br>
-            <strong>ที่อยู่:</strong> <span id="inv-addr">-</span>
-        </div>
-        <div class="text-start">
-            <strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br>
-            <strong>วันที่ออกบิล:</strong> <span id="inv-date">-</span>
-        </div>
+        <div><strong>ชื่อลูกค้า:</strong> <span id="inv-cust">-</span><br><strong>ที่อยู่:</strong> <span id="inv-addr">-</span></div>
+        <div class="text-start"><strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br><strong>วันที่:</strong> <span id="inv-date">-</span></div>
     </div>
-
     <table class="inv-table">
-        <thead>
-            <tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr>
-        </thead>
+        <thead><tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
         <tbody id="inv-tbody"></tbody>
     </table>
-
     <div class="note-section">
         <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">หมายเหตุ / ช่องทางการชำระเงิน:</div>
-        <div>• กรุณาชำระเงินภายในวันที่ 5 ของเดือน</div>
-        <div>• ชื่อบัญชี บจก.เอกรัตนโรจน์ คลอง 3 จำกัด</div>
+        <div>• กรุณาชำระเงินภายในวันที่ 5 ของเดือน | ชื่อบัญชี บจก.เอกรัตนโรจน์ คลอง 3 จำกัด</div>
         <div>• ธ.กรุงเทพ เลขที่ 231-0-65533-3 สาขาเขื่อนขันธ์-พระประแดง</div>
         <div>• เมื่อโอนแล้วกรุณาส่งสลิปยืนยันทาง LINE หรือสำนักงาน</div>
     </div>
-
-    <div class="inv-footer">
-        <div class="text-center" style="width:200px;">
-            <div style="margin-top: 40px; border-bottom: 1px dotted #333;"></div>
-            <div style="margin-top: 8px; font-size: 13px;">(ผู้รับเงิน)</div>
-        </div>
-    </div>
+    <div class="inv-footer"><div class="text-center" style="width:200px;"><div style="margin-top: 30px; border-bottom: 1px dotted #333;"></div><div style="margin-top: 5px; font-size: 13px;">(ผู้รับเงิน)</div></div></div>
 </div>
 
 <script>
-    // 📌 วาง URL ของคุณที่นี่
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
 
     let usageData = { headers: [], rows: [] };
     let meterData = { headers: [], rows: [] };
     let printStore = {}; 
     let selectedMonthName = "";
-    const originalTitle = document.title;
 
     async function fetchAll() {
         try {
@@ -182,6 +131,9 @@
             ]);
             if (uRes.status === 'success' && mRes.status === 'success') {
                 usageData = uRes; meterData = mRes;
+                // Normalize Headers (ตัดช่องว่าง)
+                usageData.headers = usageData.headers.map(h => String(h).trim());
+                meterData.headers = meterData.headers.map(h => String(h).trim());
                 setupMonth();
             }
         } catch (e) { alert("โหลดข้อมูลล้มเหลว"); }
@@ -204,8 +156,9 @@
     function renderDashboard() {
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
-        const monthH = usageData.headers[colIdx];
-        const mColIdx = meterData.headers.indexOf(monthH);
+        
+        const monthHeader = usageData.headers[colIdx];
+        const mColIdx = meterData.headers.indexOf(monthHeader);
 
         const cfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'commonfee');
         const sfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'signfee');
@@ -215,22 +168,32 @@
         let custs = {};
 
         usageData.rows.forEach(row => {
-            const id = String(row[0]).toUpperCase();
+            const id = String(row[0]).toUpperCase().trim();
             const name = String(row[3]).trim();
             const val = Number(row[colIdx]) || 0;
 
-            if (id === 'EU') eu = val; else if (id === 'WU') wu = val;
+            if (id === 'EU') eu = val; 
+            else if (id === 'WU') wu = val;
             else if (name && id !== 'EU' && id !== 'WU') {
-                if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', eRead: {p:0, c:0}, wRead: {p:0, c:0} };
+                if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', meters: [] };
                 
+                let meterInfo = { id: id, p: 0, c: 0, type: '' };
+                if (mColIdx > 0) {
+                    const mRow = meterData.rows.find(r => String(r[0]).trim().toUpperCase() === id);
+                    if (mRow) {
+                        meterInfo.c = mRow[mColIdx] || 0;
+                        meterInfo.p = mRow[mColIdx - 1] || 0;
+                    }
+                }
+
                 if (id.startsWith('E')) {
                     custs[name].eU += val;
-                    const mR = meterData.rows.find(r => r[0] === id);
-                    if (mR && mColIdx > 0) { custs[name].eRead.c = mR[mColIdx] || 0; custs[name].eRead.p = mR[mColIdx-1] || 0; }
+                    meterInfo.type = 'E';
+                    custs[name].meters.push(meterInfo);
                 } else if (id.startsWith('W')) {
                     custs[name].wU += val;
-                    const mR = meterData.rows.find(r => r[0] === id);
-                    if (mR && mColIdx > 0) { custs[name].wRead.c = mR[mColIdx] || 0; custs[name].wRead.p = mR[mColIdx-1] || 0; }
+                    meterInfo.type = 'W';
+                    custs[name].meters.push(meterInfo);
                 }
 
                 if (adIdx >= 0) custs[name].ad = row[adIdx] || '';
@@ -244,16 +207,16 @@
         document.getElementById('rateInfo').style.display = 'block';
 
         let html = '', s = { eu:0, ep:0, wu:0, wp:0, cf:0, sf:0, tt:0 };
-        printStore = {};
+        printStore = custs;
 
         Object.keys(custs).sort().forEach(n => {
             const d = custs[n];
             const ep = d.eU * eu, wp = d.wU * wu, tt = ep + wp + d.cf + d.sf;
-            printStore[n] = { ...d, ep, wp, tt, euRate: eu, wuRate: wu };
+            d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
             
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
-            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString()}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString()}</td><td class="val-fee">${d.cf}</td><td class="val-fee">${d.sf}</td><td class="val-total">${tt.toLocaleString()}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
+            html += `<tr><td class="text-start fw-bold">${n}</td><td>${d.eU}</td><td class="val-elec">${ep.toLocaleString()}</td><td>${d.wU}</td><td class="val-water">${wp.toLocaleString()}</td><td>${d.cf}</td><td>${d.sf}</td><td class="val-total">${tt.toLocaleString()}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td></tr>`;
         });
 
         document.getElementById('tableBody').innerHTML = html;
@@ -269,23 +232,24 @@
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
+        // สร้างรายการมิเตอร์ (รองรับหลายตัว)
+        let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => `<small style="display:block; color:#666;">ID: ${m.id} (ก่อน: ${m.p} - หลัง: ${m.c})</small>`).join('');
+        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => `<small style="display:block; color:#666;">ID: ${m.id} (ก่อน: ${m.p} - หลัง: ${m.c})</small>`).join('');
+
         document.getElementById('inv-tbody').innerHTML = `
-            <tr><td class="text-left">1. ค่าไฟฟ้า<br><small>(ครั้งก่อน: ${d.eRead.p} - ครั้งนี้: ${d.eRead.c})</small></td><td>${d.eU}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr><td class="text-left">2. ค่าน้ำประปา<br><small>(ครั้งก่อน: ${d.wRead.p} - ครั้งนี้: ${d.wRead.c})</small></td><td>${d.wU}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td class="text-left">2. ค่าน้ำประปา ${meterLinesW}</td><td>${d.wU}</td><td>${d.wuRate}</td><td>${d.wp.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษี</td><td>${d.tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr class="total-row bold"><td colspan="3" class="text-left">ยอดรวมสุทธิที่ต้องชำระ</td><td>${gTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr class="total-row"><td colspan="3" class="text-left">ยอดรวมสุทธิที่ต้องชำระ</td><td>${gTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
         `;
-        document.title = `ใบแจ้งหนี้-${name}-${selectedMonthName}`;
         document.getElementById('dashboardArea').style.display = 'none';
         document.getElementById('printArea').style.display = 'block';
-        window.scrollTo(0,0);
     }
 
     function closePrintView() {
-        document.title = originalTitle;
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
