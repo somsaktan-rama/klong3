@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.25</title>
+    <title>Dashboard ค่าไฟ-ค่าน้ำ คลอง 3</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -15,7 +15,6 @@
         .val-water { color: #0dcaf0; font-weight: bold; }
         .val-total { color: #198754; font-weight: bold; background-color: #e8f5e9 !important; }
 
-        /* ส่วนแสดงรายละเอียดและพิมพ์ */
         #detailArea { display: none; background-color: white; font-family: 'Sarabun', sans-serif; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .print-controls { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 15px;}
         .inv-header { text-align: center; margin-bottom: 15px; }
@@ -39,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.25</h2>
+    <h2 class="mb-4 text-primary">📊 Dashboard สรุปค่าใช้จ่าย Klong3</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -95,15 +94,12 @@
             <button class="btn btn-success" onclick="executePrint('receipt')">🧾 ใบเสร็จรับเงิน</button>
         </div>
     </div>
-                    <div class="header">
-                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">ใบแจ้งหนี้</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #222;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
-                    <div style="font-size: 15px; color: #555;">
-                        9 หมู่ที่ 3 ต.คลองสาม<br>
-                        อ.คลองหลวง จ.ปทุมธานี 12120<br>
-						เลขผู้เสียภาษี 0125565020521
-                    </div>
-                </div>
+    
+    <div class="inv-header">
+        <div id="docTitle" style="font-size: 26px; font-weight: bold; margin-bottom: 5px;">ใบแจ้งหนี้</div>
+        <div style="font-size: 18px; font-weight: bold;">บริษัท เอกรัตนโรจน์ คลอง 3 จำกัด</div>
+        <div style="font-size: 13px; color: #555;">192/31 หมู่ที่ 1 ต.บางรักพัฒนา อ.บางบัวทอง จ.นนทบุรี 11110</div>
+    </div>
     <div class="inv-info">
         <div><strong>ชื่อลูกค้า:</strong> <span id="inv-cust">-</span><br><strong>ที่อยู่:</strong> <span id="inv-addr">-</span></div>
         <div class="text-start"><strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br><strong>วันที่ออกเอกสาร:</strong> <span id="inv-date">-</span></div>
@@ -131,13 +127,15 @@
 </div>
 
 <script>
+    // 📌 ใส่ Web App URL ของคุณที่นี่
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
 
     let usageData = { headers: [], rows: [] };
     let meterData = { headers: [], rows: [] };
     let printStore = {}; 
+    let customerList = []; // ใช้เก็บรายชื่อลูกค้าเพื่ออ้างอิงเป็นตัวเลข
     let selectedMonthName = "";
-    let currentCustomer = ""; // เก็บชื่อลูกค้าที่กำลังดูรายละเอียด
+    let currentCustomer = ""; 
     const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
     function ArabicToThaiBaht(numbers) {
@@ -292,16 +290,18 @@
 
         let html = '', s = { eu:0, ep:0, wu:0, wp:0, cf:0, sf:0, tt:0 };
         printStore = custs;
+        
+        // 📌 แก้ปัญหาปุ่มพังด้วยการใช้ลำดับ (Index) แทนการส่งชื่อเป็นข้อความตรงๆ
+        customerList = Object.keys(custs).sort();
 
-        Object.keys(custs).sort().forEach(n => {
+        customerList.forEach((n, index) => {
             const d = custs[n];
             const ep = d.eU * eu; const wp = d.wU * wu; const tt = ep + wp + d.cf + d.sf;
             d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
-            const safeName = n.replace(/'/g,"\\'");
             html += `<tr>
-                <td><button class="btn btn-sm btn-outline-primary fw-bold" onclick="openDetailView('${safeName}')">🔍 ดูรายละเอียด</button></td>
+                <td><button class="btn btn-sm btn-outline-primary fw-bold" onclick="openDetailView(${index})">🔍 ดูรายละเอียด</button></td>
                 <td class="text-start fw-bold">${n}</td>
                 <td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                 <td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -323,14 +323,15 @@
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
-    // ฟังก์ชันเปิดหน้าดูรายละเอียด
-    function openDetailView(name) {
+    function openDetailView(index) {
+        // ดึงชื่อลูกค้าจากลำดับที่กด
+        const name = customerList[index];
         currentCustomer = name;
         const d = printStore[name];
         const vat = d.tt * 0.07;
         const gTotal = d.tt + vat;
 
-        // ตั้งค่าเริ่มต้นบนจอให้เป็นใบแจ้งหนี้
+        // ตั้งค่าเริ่มต้นบนจอ
         document.getElementById('docTitle').innerText = 'ใบแจ้งหนี้';
         document.getElementById('signatureText').innerText = '(ผู้รับเงิน)';
 
@@ -366,23 +367,19 @@
         window.scrollTo(0,0);
     }
 
-    // ฟังก์ชันสั่งพิมพ์แยกตามประเภท
     function executePrint(type) {
         const docTitleText = (type === 'invoice') ? 'ใบแจ้งหนี้' : 'ใบเสร็จรับเงิน';
         
-        // ปรับเปลี่ยนคำตามประเภทเอกสาร
         document.getElementById('docTitle').innerText = docTitleText;
         document.title = `${docTitleText}-${currentCustomer}-${selectedMonthName}`;
 
-        // หน่วงเวลาเล็กน้อยเพื่อให้ DOM อัปเดตคำว่า ใบเสร็จ/ใบแจ้งหนี้ ทันก่อนหน้าต่างพรินต์เด้ง
         setTimeout(() => {
             window.print();
         }, 100);
     }
 
-    // ฟังก์ชันปิดหน้าดูรายละเอียด
     function closeDetailView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.25";
+        document.title = "Dashboard ค่าไฟ-ค่าน้ำ คลอง 3";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
