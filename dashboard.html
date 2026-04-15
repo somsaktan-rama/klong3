@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.24</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
         .text-left { text-align: left !important; }
         .total-row { background: #e8f5e9; font-weight: bold; font-size: 1.1em; }
         .note-section { margin-top: 15px; padding: 10px 15px; border: 1px dashed #ccc; font-size: 13px; }
-        .inv-footer { margin-top: 25px; display: flex; justify-content: flex-end; }
+        .inv-footer { margin-top: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
 
         @media print {
             @page { margin: 0; }
@@ -38,7 +38,7 @@
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23</h2>
+    <h2 class="mb-4 text-primary">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.24</h2>
 
     <div class="card p-3">
         <div class="row align-items-end">
@@ -57,6 +57,7 @@
             <table class="table table-hover table-bordered mb-0 align-middle text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
                     <tr>
+                        <th>พิมพ์</th>
                         <th class="text-start">Customer</th>
                         <th>ไฟ(หน่วย)</th>
                         <th>ค่าไฟ</th>
@@ -65,18 +66,17 @@
                         <th>CommonFee</th>
                         <th>SignFee</th>
                         <th class="bg-light">รวม(บาท)</th>
-                        <th>พิมพ์</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
                 <tfoot id="tableFoot" class="table-light fw-bold" style="display: none;">
                     <tr>
+                        <td></td>
                         <td class="text-end">รวม:</td>
                         <td id="sumElecUnits">0</td><td id="sumElecPrice" class="val-elec">0</td>
                         <td id="sumWaterUnits">0</td><td id="sumWaterPrice" class="val-water">0</td>
                         <td id="sumCommonFee">0</td><td id="sumSignFee">0</td>
                         <td id="sumTotalPrice" class="val-total">0</td>
-                        <td></td>
                     </tr>
                 </tfoot>
             </table>
@@ -105,6 +105,9 @@
     <table class="inv-table">
         <thead><tr><th class="text-left">รายการ</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>จำนวนเงิน</th></tr></thead>
         <tbody id="inv-tbody"></tbody>
+        <tfoot>
+            <tr class="total-row"><td colspan="3" class="text-left" id="bahtText">(-)</td><td id="inv-grandTotal">0.00</td></tr>
+        </tfoot>
     </table>
     <div class="note-section">
         <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">หมายเหตุ / ช่องทางการชำระเงิน:</div>
@@ -112,7 +115,13 @@
         <div>• ธ.กรุงเทพ เลขที่ 231-0-65533-3 สาขาเขื่อนขันธ์-พระประแดง</div>
         <div>• เมื่อโอนแล้วกรุณาส่งสลิปยืนยันทาง LINE หรือสำนักงาน</div>
     </div>
-    <div class="inv-footer"><div class="text-center" style="width:200px;"><div style="margin-top: 30px; border-bottom: 1px dotted #333;"></div><div style="margin-top: 5px; font-size: 13px;">(ผู้รับเงิน)</div></div></div>
+    <div class="inv-footer">
+        <div style="font-size: 12px; color: #777;">* เอกสารนี้พิมพ์โดยระบบคอมพิวเตอร์</div>
+        <div class="text-center" style="width:200px;">
+            <div style="margin-top: 30px; border-bottom: 1px dotted #333;"></div>
+            <div style="margin-top: 5px; font-size: 13px;">(ผู้รับเงิน)</div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -123,6 +132,40 @@
     let printStore = {}; 
     let selectedMonthName = "";
     const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+    // ฟังก์ชันแปลงเลขเป็นภาษาไทย
+    function ArabicToThaiBaht(numbers) {
+        numbers = parseFloat(numbers).toFixed(2);
+        let numberArray = numbers.split('.');
+        let baht = numberArray[0];
+        let satang = numberArray[1];
+        let result = "";
+        let digit = ['ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+        let unit = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+
+        function convert(nums) {
+            let res = "";
+            let len = nums.length;
+            for (let i = 0; i < len; i++) {
+                let n = nums.charAt(i);
+                let u = len - i - 1;
+                if (n !== '0') {
+                    if (u === 1 && n === '1') res += 'สิบ';
+                    else if (u === 1 && n === '2') res += 'ยี่สิบ';
+                    else if (u === 0 && n === '1' && len > 1) res += 'เอ็ด';
+                    else res += digit[n] + unit[u];
+                }
+            }
+            return res;
+        }
+
+        if (baht === '0') result = "ศูนย์บาท";
+        else result = convert(baht) + "บาท";
+
+        if (satang === '00') result += "ถ้วน";
+        else result += convert(satang) + "สตางค์";
+        return result;
+    }
 
     async function fetchAll() {
         try {
@@ -144,8 +187,7 @@
         sel.innerHTML = '';
         let months = [];
         usageData.headers.forEach((h, i) => {
-            // ดึงคอลัมน์เดือน (ข้ามคอลัมน์ CommonFee, SignFee ฯลฯ)
-            if (i >= 4 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
+            if (i >= 5 && h && !['commonfee', 'signfee', 'address', 'xfactor'].includes(h.toLowerCase())) {
                 months.push({ name: h, idx: i });
             }
         });
@@ -217,14 +259,11 @@
                 if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', meters: [] };
                 
                 let meterInfo = { id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '', xf: 1 };
-                
                 if (mColIdx !== -1) {
                     const mRow = meterData.rows.find(r => String(r[0] || '').trim().toUpperCase() === id);
                     if (mRow) {
                         meterInfo.c = mRow[mColIdx] !== "" ? Number(mRow[mColIdx]) : 0;
                         meterInfo.p = (mColIdx > 0 && mRow[mColIdx - 1] !== "") ? Number(mRow[mColIdx - 1]) : 0;
-                        
-                        // 📌 หัวใจสำคัญ: ดึง Xfactor จากชีต "Klong3Data" คอลัมน์ E (Index 4) ของมิเตอร์ตัวนี้
                         meterInfo.xf = Number(mRow[4]) || 1; 
                     }
                 }
@@ -254,15 +293,18 @@
 
         Object.keys(custs).sort().forEach(n => {
             const d = custs[n];
-            // 📌 Dashboard จะคิดราคาปกติ (เพราะ Usage Sheet คือหน่วยที่คูณมาเสร็จแล้วตามที่คุณแจ้ง)
-            const ep = d.eU * eu; 
-            const wp = d.wU * wu;
-            const tt = ep + wp + d.cf + d.sf;
+            const ep = d.eU * eu; const wp = d.wU * wu; const tt = ep + wp + d.cf + d.sf;
             d.ep = ep; d.wp = wp; d.tt = tt; d.euRate = eu; d.wuRate = wu;
-            
             s.eu += d.eU; s.ep += ep; s.wu += d.wU; s.wp += wp; s.cf += d.cf; s.sf += d.sf; s.tt += tt;
 
+            const safeName = n.replace(/'/g,"\\'");
             html += `<tr>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openPrint('${safeName}', 'invoice')">ใบแจ้งหนี้</button>
+                        <button class="btn btn-sm btn-outline-success" onclick="openPrint('${safeName}', 'receipt')">ใบเสร็จ</button>
+                    </div>
+                </td>
                 <td class="text-start fw-bold">${n}</td>
                 <td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                 <td class="val-elec">${ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
@@ -271,7 +313,6 @@
                 <td>${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
                 <td>${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
                 <td class="val-total">${tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-                <td><button class="btn btn-sm btn-outline-primary" onclick="openPrint('${n.replace(/'/g,"\\'")}')">🖨️</button></td>
             </tr>`;
         });
 
@@ -285,25 +326,30 @@
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
-    function openPrint(name) {
+    function openPrint(name, type) {
         const d = printStore[name];
-        const vat = d.tt * 0.07, gTotal = d.tt + vat;
+        const vat = d.tt * 0.07;
+        const gTotal = d.tt + vat;
+
+        // ตั้งชื่อหัวเอกสาร
+        const docTitleText = (type === 'invoice') ? 'ใบแจ้งหนี้' : 'ใบเสร็จรับเงิน';
+        document.getElementById('docTitle').innerText = docTitleText;
+        document.title = `${docTitleText}-${name}-${selectedMonthName}`;
+
         document.getElementById('inv-cust').innerText = name;
         document.getElementById('inv-addr').innerText = d.ad || '-';
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
-        // 📌 เฉพาะมิเตอร์ไฟฟ้า (E): นำค่า ก่อน-หลัง มาคูณกับ Xfactor ที่ดึงมาจาก Klong3Data
         let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => {
-            const pMulti = m.p * m.xf;
-            const cMulti = m.c * m.xf;
+            const pMulti = m.p * m.xf; const cMulti = m.c * m.xf;
             return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
         }).join('');
         
-        // 📌 ส่วนมิเตอร์น้ำ (W): แสดงเลขมิเตอร์ปกติ 
-        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => 
-            `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${m.p.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${m.c.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`
-        ).join('');
+        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => {
+            const pMulti = m.p * m.xf; const cMulti = m.c * m.xf;
+            return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
+        }).join('');
 
         document.getElementById('inv-tbody').innerHTML = `
             <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
@@ -311,17 +357,20 @@
             <tr><td class="text-left">3. ค่าส่วนกลาง (CommonFee)</td><td>-</td><td>-</td><td>${d.cf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr><td class="text-left">4. ค่าป้าย (SignFee)</td><td>-</td><td>-</td><td>${d.sf.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
             <tr class="bold"><td colspan="3" class="text-left">รวมเงินก่อนภาษี</td><td>${d.tt.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
-            <tr class="total-row"><td colspan="3" class="text-left">ยอดรวมสุทธิที่ต้องชำระ</td><td>${gTotal.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
+            <tr><td colspan="3" class="text-left">ภาษีมูลค่าเพิ่ม 7%</td><td>${vat.toLocaleString(undefined,{minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>
         `;
-        document.title = `ใบแจ้งหนี้-${name}-${selectedMonthName}`;
+        
+        // ยอดรวมสุทธิและตัวอักษรไทย
+        document.getElementById('inv-grandTotal').innerText = gTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('bahtText').innerText = "(" + ArabicToThaiBaht(gTotal) + ")";
+
         document.getElementById('dashboardArea').style.display = 'none';
         document.getElementById('printArea').style.display = 'block';
         window.scrollTo(0,0);
     }
 
     function closePrintView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.23";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.24";
         document.getElementById('printArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
