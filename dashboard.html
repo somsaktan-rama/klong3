@@ -6,6 +6,8 @@
     <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.31</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
@@ -26,6 +28,9 @@
         .total-row { background: #e8f5e9; font-weight: bold; font-size: 1.1em; }
         .note-section { margin-top: 15px; padding: 10px 15px; border: 1px dashed #ccc; font-size: 13px; }
         .inv-footer { margin-top: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        /* 📌 ตั้งค่ากราฟ */
+        .chart-container { width: 100%; max-width: 700px; margin: 20px auto; }
 
         @media print {
             @page { margin: 0; }
@@ -123,7 +128,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <div id="detailArea">
@@ -164,6 +168,11 @@
             <tr class="total-row"><td colspan="3" class="text-left" id="bahtText">(-)</td><td id="inv-grandTotal">0.00</td></tr>
         </tfoot>
     </table>
+    
+    <div class="chart-container">
+        <canvas id="usageChart" height="120"></canvas>
+    </div>
+
     <div class="note-section">
         <div style="font-weight: bold; text-decoration: underline; margin-bottom: 5px;">หมายเหตุ / ช่องทางการชำระเงิน:</div>
         <div>• กรุณาชำระเงินภายในวันที่ 5 ของเดือน | ชื่อบัญชี บจก.เอกรัตนโรจน์ คลอง 3 จำกัด</div>
@@ -180,6 +189,7 @@
 </div>
 
 <script>
+    // 📌 วาง Web App URL ของคุณที่นี่
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
 
     let usageData = { headers: [], rows: [] };
@@ -190,6 +200,7 @@
     let currentCustomer = ""; 
     let currentBillMonth = 0;
     let currentBillYear = 0;
+    let chartInstance = null; // ตัวแปรเก็บ Object กราฟ
 
     const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -314,7 +325,6 @@
         const adIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'address');
 
         let eu = 0, wu = 0;
-        // ตัวแปรเก็บข้อมูลสรุปเพิ่มเติม
         let vEbill = 0, vEsolar = 0, vEcommon = 0, vWbill = 0, vWcommon = 0; 
         
         let custs = {};
@@ -324,7 +334,6 @@
             const name = String(row[3] || '').trim();
             const val = Number(row[colIdx]) || 0;
 
-            // ดักจับ ID สำหรับแสดงข้อมูลเพิ่มเติม
             if (id === 'EBILL') vEbill = val;
             else if (id === 'ESOLAR') vEsolar = val;
             else if (id === 'ECOMMON') vEcommon = val;
@@ -366,7 +375,6 @@
             }
         });
 
-        // อัปเดตข้อมูลสรุปเพิ่มเติมลงบนหน้าจอ
         document.getElementById('valEbill').innerText = vEbill.toLocaleString(undefined, {maximumFractionDigits: 2});
         document.getElementById('valEsolar').innerText = vEsolar.toLocaleString(undefined, {maximumFractionDigits: 2});
         document.getElementById('valEcommon').innerText = vEcommon.toLocaleString(undefined, {maximumFractionDigits: 2});
@@ -410,12 +418,105 @@
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
+    // 📌 ฟังก์ชันสร้างกราฟ
+    function buildTrendChart(customerName, currentMonthColIndex) {
+        let labels = [];
+        let elecTrend = [];
+        let waterTrend = [];
+
+        // ถอยหลังไป 12 เดือน (หรือเท่าที่มีคอลัมน์)
+        let startCol = currentMonthColIndex - 11;
+        if (startCol < 5) startCol = 5; // คอลัมน์ที่ 5 คือเดือนแรกสุด
+
+        for (let c = startCol; c <= currentMonthColIndex; c++) {
+            let mName = usageData.headers[c];
+            let parsed = parseMeterHeader(mName);
+            // แสดงชื่อเดือนย่อๆ เพื่อความสวยงามในแกนกราฟ
+            labels.push(parsed ? `${shortMonths[parsed.m - 1]}` : mName);
+            
+            let sumE = 0;
+            let sumW = 0;
+            
+            usageData.rows.forEach(row => {
+                const name = String(row[3]).trim();
+                const id = String(row[0] || '').toUpperCase().trim();
+                if (name === customerName) {
+                    if (id.startsWith('E')) sumE += Number(row[c]) || 0;
+                    if (id.startsWith('W')) sumW += Number(row[c]) || 0;
+                }
+            });
+            elecTrend.push(sumE);
+            waterTrend.push(sumW);
+        }
+
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        
+        // ล้างกราฟเก่าทิ้งก่อนวาดใหม่
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'ไฟฟ้า (หน่วย)',
+                        data: elecTrend,
+                        backgroundColor: 'rgba(214, 51, 132, 0.7)', // สีชมพู
+                        borderColor: 'rgba(214, 51, 132, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'น้ำประปา (หน่วย)',
+                        data: waterTrend,
+                        backgroundColor: 'rgba(13, 202, 240, 0.7)', // สีฟ้า
+                        borderColor: 'rgba(13, 202, 240, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, // ปิดแอนิเมชั่นเพื่อให้สั่งพิมพ์ได้ทันที
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'ไฟ (หน่วย)', font: { family: 'Sarabun' } }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'น้ำ (หน่วย)', font: { family: 'Sarabun' } }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'ประวัติการใช้งานย้อนหลัง',
+                        font: { family: 'Sarabun', size: 16, weight: 'bold' }
+                    },
+                    legend: { labels: { font: { family: 'Sarabun' } } }
+                }
+            }
+        });
+    }
+
     function openDetailView(index) {
         const name = customerList[index];
         currentCustomer = name;
         const d = printStore[name];
         const vat = d.tt * 0.07;
         const gTotal = d.tt + vat;
+        const colIdx = parseInt(document.getElementById('monthSelect').value);
 
         if (isMobileDevice) {
             const btnInv = document.getElementById('btnInvoice');
@@ -462,6 +563,9 @@
         
         document.getElementById('inv-grandTotal').innerText = gTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         document.getElementById('bahtText').innerText = "(" + ArabicToThaiBaht(gTotal) + ")";
+
+        // 📌 สั่งให้วาดกราฟก่อนเปิดแสดงหน้าบิล
+        buildTrendChart(name, colIdx);
 
         document.getElementById('dashboardArea').style.display = 'none';
         document.getElementById('detailArea').style.display = 'block';
