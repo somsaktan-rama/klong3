@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.30</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.31</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
-        .table-responsive { max-height: 65vh; overflow-y: auto; }
+        .table-responsive { max-height: 60vh; overflow-y: auto; }
         th { position: sticky; top: 0; background-color: #f8f9fa !important; z-index: 1; }
         .val-elec { color: #d63384; font-weight: bold; }
         .val-water { color: #0dcaf0; font-weight: bold; }
@@ -39,7 +39,7 @@
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.30</h2>
+        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.31</h2>
         <button class="btn btn-outline-secondary fw-bold" onclick="refreshData(this)">🔄 รีเฟรชข้อมูล</button>
     </div>
 
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <div class="card p-0 overflow-hidden">
+    <div class="card p-0 overflow-hidden mb-3">
         <div class="table-responsive">
             <table class="table table-hover table-bordered mb-0 align-middle text-center" style="font-size: 0.9rem;">
                 <thead class="table-light">
@@ -87,6 +87,43 @@
             </table>
         </div>
     </div>
+
+    <div class="card p-3 bg-light border-0">
+        <h6 class="text-primary fw-bold mb-3">📌 ข้อมูลอ้างอิงเพิ่มเติม (ประจำเดือน)</h6>
+        <div class="row row-cols-2 row-cols-md-5 g-3 text-center">
+            <div class="col">
+                <div class="p-2 bg-white rounded shadow-sm border-start border-danger border-4">
+                    <div class="text-muted" style="font-size: 0.8rem;">Ebill (ไฟฟ้าภูมิภาค)</div>
+                    <div class="fw-bold text-dark fs-5" id="valEbill">0</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-2 bg-white rounded shadow-sm border-start border-warning border-4">
+                    <div class="text-muted" style="font-size: 0.8rem;">Esolar (ไฟฟ้า Solar)</div>
+                    <div class="fw-bold text-dark fs-5" id="valEsolar">0</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-2 bg-white rounded shadow-sm border-start border-secondary border-4">
+                    <div class="text-muted" style="font-size: 0.8rem;">Ecommon (ไฟฟ้าส่วนกลาง)</div>
+                    <div class="fw-bold text-dark fs-5" id="valEcommon">0</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-2 bg-white rounded shadow-sm border-start border-info border-4">
+                    <div class="text-muted" style="font-size: 0.8rem;">Wbill (ประปาภูมิภาค)</div>
+                    <div class="fw-bold text-dark fs-5" id="valWbill">0</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="p-2 bg-white rounded shadow-sm border-start border-secondary border-4">
+                    <div class="text-muted" style="font-size: 0.8rem;">Wcommon (น้ำส่วนกลาง)</div>
+                    <div class="fw-bold text-dark fs-5" id="valWcommon">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div id="detailArea">
@@ -277,6 +314,9 @@
         const adIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'address');
 
         let eu = 0, wu = 0;
+        // ตัวแปรเก็บข้อมูลสรุปเพิ่มเติม
+        let vEbill = 0, vEsolar = 0, vEcommon = 0, vWbill = 0, vWcommon = 0; 
+        
         let custs = {};
 
         usageData.rows.forEach(row => {
@@ -284,7 +324,13 @@
             const name = String(row[3] || '').trim();
             const val = Number(row[colIdx]) || 0;
 
-            if (id === 'EU') eu = val; 
+            // ดักจับ ID สำหรับแสดงข้อมูลเพิ่มเติม
+            if (id === 'EBILL') vEbill = val;
+            else if (id === 'ESOLAR') vEsolar = val;
+            else if (id === 'ECOMMON') vEcommon = val;
+            else if (id === 'WBILL') vWbill = val;
+            else if (id === 'WCOMMON') vWcommon = val;
+            else if (id === 'EU') eu = val; 
             else if (id === 'WU') wu = val;
             else if (name && id !== 'EU' && id !== 'WU') {
                 if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', shopId: '00', meters: [] };
@@ -320,13 +366,19 @@
             }
         });
 
+        // อัปเดตข้อมูลสรุปเพิ่มเติมลงบนหน้าจอ
+        document.getElementById('valEbill').innerText = vEbill.toLocaleString(undefined, {maximumFractionDigits: 2});
+        document.getElementById('valEsolar').innerText = vEsolar.toLocaleString(undefined, {maximumFractionDigits: 2});
+        document.getElementById('valEcommon').innerText = vEcommon.toLocaleString(undefined, {maximumFractionDigits: 2});
+        document.getElementById('valWbill').innerText = vWbill.toLocaleString(undefined, {maximumFractionDigits: 2});
+        document.getElementById('valWcommon').innerText = vWcommon.toLocaleString(undefined, {maximumFractionDigits: 2});
+
         document.getElementById('euRate').innerText = eu;
         document.getElementById('wuRate').innerText = wu;
         document.getElementById('rateInfo').style.display = 'block';
 
         let html = '', s = { eu:0, ep:0, wu:0, wp:0, cf:0, sf:0, tt:0 };
         printStore = custs;
-        
         customerList = Object.keys(custs).sort();
 
         customerList.forEach((n, index) => {
@@ -418,7 +470,6 @@
 
     async function executePrint(type, btnElem) {
         const docTitleText = (type === 'invoice') ? 'ใบแจ้งหนี้' : 'ใบเสร็จรับเงิน';
-        
         document.getElementById('docTitle').innerText = docTitleText;
         document.title = `${docTitleText}-${currentCustomer}-${selectedMonthName}`;
 
@@ -435,7 +486,6 @@
             btnElem.disabled = true;
 
             try {
-                // ยิง API แบบรับข้อมูลกลับเป็น Text ก่อนเพื่อเช็คว่า Error ฝั่ง Google หรือไม่
                 const url = `${WEB_APP_URL}?action=addLog&id=${elecMeter.id}&col=${colIdx}&msg=${encodeURIComponent(logMessage)}`;
                 const response = await fetch(url);
                 const textRes = await response.text();
@@ -464,7 +514,7 @@
     }
 
     function closeDetailView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.30";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.31";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
