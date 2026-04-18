@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กรอก meter คลอง 3 V1.06</title>
+    <title>กรอก meter คลอง 3 V1.07</title>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
       .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -22,7 +22,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>📝 กรอก meter คลอง 3 V1.06</h2>
+      <h2>📝 กรอก meter คลอง 3 V1.07</h2>
 
       <div class="row">
         <div class="group">
@@ -124,30 +124,24 @@
         fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
           .then(r => r.json())
           .then(res => {
-            // เดือนก่อนหน้า
             lastVal = Number(res.lastValue || 0);
             document.getElementById('lastValue').value = lastVal;
-            document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
+            document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '';
             document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
 
             const newInput = document.getElementById('newValue');
-            const currMeta = document.getElementById('currMeta');
-
-            // 📌 ตรวจสอบว่าเดือนนี้มีการกรอกไปหรือยัง
+            
+            // 📌 แก้ไขตรงนี้: ถ้าเดือนนี้ยังไม่มีข้อมูล ให้เอาค่าเดือนที่แล้วมาใส่รอไว้เลย
             if (res.currValue !== '' && res.currValue != null) {
-              // ถ้าเคยกรอกแล้ว ให้ดึงของเดิมมาโชว์
               newInput.value = res.currValue;
             } else {
-              // 📌 ถ้ายังไม่เคยกรอก ดึงค่าของเดือนที่แล้วมาดักรอไว้เลย จะได้ไม่ต้องพิมพ์ใหม่ทั้งหมด
-              newInput.value = lastVal; 
+              newInput.value = lastVal; // ดึงค่าเดิมมาตั้งต้นให้
             }
 
             updateDiff();
-
-            // แจ้งเตือน Note
+            
             if (res.currNote) {
-              const label = res.currMonth ? res.currMonth : 'เดือนนี้';
-              currMeta.textContent = `*มีข้อมูลเดิมใน ${label} • Note: ${res.currNote}`;
+              document.getElementById('currMeta').textContent = `* หมายเหตุเดิม: ${res.currNote}`;
             }
 
             document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
@@ -155,7 +149,6 @@
           })
           .catch(err => {
             alert('ดึงข้อมูลล้มเหลว: ' + err.message);
-            document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
             document.getElementById('saveBtn').disabled = false;
           });
       }
