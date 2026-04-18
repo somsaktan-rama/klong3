@@ -26,7 +26,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>📝 Meter คลอง 3</h2>
+      <h2>📝 จด Meter คลอง 3</h2>
 
       <div id="lineProfile" class="user-info" style="display:none;">
         <img id="profileImg" src="" alt="profile">
@@ -207,8 +207,9 @@
             let ip = "Unknown IP";
             const ipServices = [
                 'https://api.ipify.org?format=json', // เจ้าที่ 1
-                'https://jsonip.com/',               // เจ้าที่ 2 (ตัวสำรอง)
-                'https://api.seeip.org/jsonip'       // เจ้าที่ 3 (ตัวสำรอง)
+                'https://ipinfo.io/json',            // เจ้าที่ 2 (ตัวสำรอง)
+				'https://api.seeip.org/jsonip',      // เจ้าที่ 3 (ตัวสำรอง)
+				'https://jsonip.com/'               // เจ้าที่ 4 (ตัวสำรอง)
             ];
 
             for (let url of ipServices) {
