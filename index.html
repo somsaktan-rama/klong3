@@ -26,7 +26,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>📝 บันทึกมิเตอร์ Klong 3</h2>
+      <h2>📝 Meter คลอง 3</h2>
 
       <div id="lineProfile" class="user-info" style="display:none;">
         <img id="profileImg" src="" alt="profile">
@@ -203,14 +203,25 @@
         status.textContent = '⏳ กำลังวิเคราะห์และบันทึกข้อมูล...';
 
         try {
-            // 1. ดึง IP (ใส่ Try-Catch ป้องกัน PC บางเครื่องบล็อกการดึง IP)
+// 1. ดึง IP (อัปเกรด: เพิ่มตัวสำรองกรณี Firefox หรือ Adblocker บล็อก)
             let ip = "Unknown IP";
-            try {
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipRes.json();
-                ip = ipData.ip;
-            } catch (ipErr) {
-                console.warn("ไม่สามารถดึง IP ได้ (อาจติด Adblocker)");
+            const ipServices = [
+                'https://api.ipify.org?format=json', // เจ้าที่ 1
+                'https://jsonip.com/',               // เจ้าที่ 2 (ตัวสำรอง)
+                'https://api.seeip.org/jsonip'       // เจ้าที่ 3 (ตัวสำรอง)
+            ];
+
+            for (let url of ipServices) {
+                try {
+                    const ipRes = await fetch(url);
+                    const ipData = await ipRes.json();
+                    if (ipData.ip) {
+                        ip = ipData.ip;
+                        break; // ถ้าดึง IP สำเร็จแล้ว ให้หยุดและข้ามตัวสำรองไปเลย
+                    }
+                } catch (ipErr) {
+                    console.warn(`ดึง IP จาก ${url} ถูกบล็อก กำลังลองเว็บถัดไป...`);
+                }
             }
 
             // 2. วิเคราะห์เครื่องและเบราว์เซอร์
