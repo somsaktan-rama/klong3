@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กรอก meter คลอง 3 V1.07</title>
+    <title>กรอก meter คลอง 3 V1.08</title>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
       .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -22,7 +22,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>📝 กรอก meter คลอง 3 V1.07</h2>
+      <h2>📝 กรอก meter คลอง 3 V1.08</h2>
 
       <div class="row">
         <div class="group">
@@ -117,42 +117,42 @@
         }
       }
 
-      function loadInfo(id) {
-        document.getElementById('saveBtn').innerText = "⏳ กำลังดึงข้อมูล...";
-        document.getElementById('saveBtn').disabled = true;
+function loadInfo(id) {
+  document.getElementById('saveBtn').innerText = "⏳ กำลังดึงข้อมูล...";
+  document.getElementById('saveBtn').disabled = true;
 
-        fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
-          .then(r => r.json())
-          .then(res => {
-            lastVal = Number(res.lastValue || 0);
-            document.getElementById('lastValue').value = lastVal;
-            document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '';
-            document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
+  fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
+    .then(r => r.json())
+    .then(res => {
+      lastVal = Number(res.lastValue || 0);
+      document.getElementById('lastValue').value = lastVal;
+      document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '';
+      document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
 
-            const newInput = document.getElementById('newValue');
-            
-            // 📌 แก้ไขตรงนี้: ถ้าเดือนนี้ยังไม่มีข้อมูล ให้เอาค่าเดือนที่แล้วมาใส่รอไว้เลย
-            if (res.currValue !== '' && res.currValue != null) {
-              newInput.value = res.currValue;
-            } else {
-              newInput.value = lastVal; // ดึงค่าเดิมมาตั้งต้นให้
-            }
-
-            updateDiff();
-            
-            if (res.currNote) {
-              document.getElementById('currMeta').textContent = `* หมายเหตุเดิม: ${res.currNote}`;
-            }
-
-            document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
-            document.getElementById('saveBtn').disabled = false;
-          })
-          .catch(err => {
-            alert('ดึงข้อมูลล้มเหลว: ' + err.message);
-            document.getElementById('saveBtn').disabled = false;
-          });
+      const newInput = document.getElementById('newValue');
+      
+      // 📌 ปรับปรุง: ถ้าเดือนนี้ยังไม่มีการบันทึก (ค่าว่าง) ให้เอาค่าเดือนที่แล้วมาใส่รอไว้เลย
+      if (res.currValue !== '' && res.currValue != null) {
+        newInput.value = res.currValue;
+      } else {
+        newInput.value = lastVal; // ดึงค่าเดือนที่แล้วมาตั้งต้นให้
       }
 
+      updateDiff();
+      
+      if (res.currNote) {
+        document.getElementById('currMeta').textContent = `* หมายเหตุเดิม: ${res.currNote}`;
+      }
+
+      document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
+      document.getElementById('saveBtn').disabled = false;
+    })
+    .catch(err => {
+      alert('ดึงข้อมูลล้มเหลว: ' + err.message);
+      document.getElementById('saveBtn').disabled = false;
+    });
+}
+      
       function updateDiff() {
         const newVal = Number(document.getElementById('newValue').value || 0);
         const diff = newVal - lastVal;
