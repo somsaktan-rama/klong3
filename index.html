@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กรอก meter คลอง 3 (LIFF)</title>
+    <title>บันทึกมิเตอร์ Klong 3</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
@@ -14,66 +14,34 @@
       button { padding: 10px 20px; font-size: 16px; background: #0d6efd; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s;}
       button:hover { background: #0b5ed7; }
       button:disabled { background: #6c757d; cursor: not-allowed; }
-      #diff { font-weight: bold; font-size: 18px; }
       #status { margin-top: 10px; text-align: center; font-size: 14px; font-weight: bold; width: 100%; display: block;}
       .group { display: flex; flex-direction: column; width: 100%; gap: 5px; }
       label { font-weight: bold; color: #555; }
       .note { color: #dc3545; font-size: 13px; font-weight: bold; }
-      .readonly-input { background-color: #e9ecef; }
-      .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 10px; background: #e7f3ff; border-radius: 8px; }
-      .user-info img { width: 40px; height: 40px; border-radius: 50%; }
+      .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 10px; background: #e7f3ff; border-radius: 8px; border: 1px solid #b6d4fe; }
+      .user-info img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
     </style>
   </head>
   <body>
     <div class="container">
-      <h2>📝 จด Meter คลอง 3</h2>
+      <h2>📝 บันทึกมิเตอร์คลอง 3</h2>
 
       <div id="lineProfile" class="user-info" style="display:none;">
         <img id="profileImg" src="" alt="profile">
-        <div>เข้าสู่ระบบโดย: <span id="lineName" style="font-weight:bold; color:#0d6efd;">...</span></div>
+        <div>ผู้บันทึก: <span id="lineName" style="font-weight:bold; color:#0d6efd;">...</span></div>
+      </div>
+      <div id="pcMode" class="user-info" style="display:none; background: #f8f9fa; border-color: #dee2e6;">
+        <div>💻 <strong>โหมดผู้ดูแล (PC):</strong> ไม่ต้องลงชื่อเข้าใช้ LINE</div>
       </div>
 
-      <div class="row">
-        <div class="group">
-          <label for="elist">⚡ มิเตอร์ไฟ (E):</label>
-          <select id="elist" onchange="onPick('E')">
-            <option value="">⏳ กำลังโหลดข้อมูล...</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="group">
-          <label for="wlist">💧 มิเตอร์น้ำ (W):</label>
-          <select id="wlist" onchange="onPick('W')">
-            <option value="">⏳ กำลังโหลดข้อมูล...</option>
-          </select>
-        </div>
-      </div>
+      <div class="row"><div class="group"><label for="elist">⚡ มิเตอร์ไฟ (E):</label><select id="elist" onchange="onPick('E')"><option value="">⏳ กำลังโหลดข้อมูล...</option></select></div></div>
+      <div class="row"><div class="group"><label for="wlist">💧 มิเตอร์น้ำ (W):</label><select id="wlist" onchange="onPick('W')"><option value="">⏳ กำลังโหลดข้อมูล...</option></select></div></div>
 
       <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-      <div class="row">
-        <div class="group">
-          <label>⬅️ ค่าของเดือนก่อนหน้า <span id="lastMonth" style="font-weight: normal; color: #888;"></span> :</label>
-          <input id="lastValue" type="number" class="readonly-input" readonly>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="group">
-          <label for="newValue">➡️ ค่าปัจจุบัน <span id="currMonthLabel" style="font-weight: normal; color: #0d6efd;"></span> :</label>
-          <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
-          <span id="currMeta" class="note"></span>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="group" style="flex-direction: row; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
-          <label style="margin: 0;">ผลต่างการใช้งาน:</label>
-          <span id="diff">0</span>
-        </div>
-      </div>
+      <div class="row"><div class="group"><label>⬅️ ค่าก่อนหน้า <span id="lastMonth" style="font-weight:normal; color:#888;"></span>:</label><input id="lastValue" type="number" readonly style="background:#e9ecef;"></div></div>
+      <div class="row"><div class="group"><label>➡️ ค่าปัจจุบัน <span id="currMonthLabel" style="font-weight:normal; color:#0d6efd;"></span>:</label><input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน"><span id="currMeta" class="note"></span></div></div>
+      <div class="row"><div class="group" style="flex-direction:row; justify-content:space-between; background:#f8f9fa; padding:10px; border-radius:6px;"><label style="margin:0;">ผลต่างการใช้งาน:</label><span id="diff" style="font-weight:bold; font-size:18px;">0</span></div></div>
 
       <div class="row" style="margin-top: 20px;">
         <button id="saveBtn" onclick="saveData()">💾 บันทึกข้อมูล</button>
@@ -82,28 +50,32 @@
     </div>
 
     <script>
-      // 📌 ใส่ Web App URL และ LIFF ID
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzklH6nDFcGYXz7UqZyqaQnmQSs8ERptGMz6adRaB07lfzNnEEPjcN5DEq4V10L6spK/exec"; 
       const LIFF_ID = "2009770064-DQfU7Y80"; 
 
       let userProfile = null;
       let lastVal = 0;
 
-      // เริ่มต้นระบบ LIFF
       async function main() {
         try {
           await liff.init({ liffId: LIFF_ID });
+          const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
           if (liff.isLoggedIn()) {
             userProfile = await liff.getProfile();
             document.getElementById('lineProfile').style.display = 'flex';
             document.getElementById('lineName').textContent = userProfile.displayName;
             document.getElementById('profileImg').src = userProfile.pictureUrl;
           } else {
-            // ถ้าเปิดบน PC หรือ Browser นอก LINE ให้ทำการล็อกอิน
-            liff.login();
+            if (isMobile) {
+              liff.login(); // บังคับ Login เฉพาะบนมือถือ
+            } else {
+              document.getElementById('pcMode').style.display = 'block'; // บน PC แสดงสถานะโหมดดูแล
+            }
           }
         } catch (err) {
-          console.warn("LIFF Init Failed (อาจเปิดบนบราวเซอร์ที่ไม่รองรับ):", err);
+          console.warn("LIFF Init Failed:", err);
+          document.getElementById('pcMode').style.display = 'block';
         }
         loadLists();
       }
@@ -112,39 +84,23 @@
         fetch(WEB_APP_URL + "?action=getLists")
           .then(r => r.json())
           .then(res => {
-            const el = document.getElementById('elist');
-            const wl = document.getElementById('wlist');
+            const el = document.getElementById('elist'), wl = document.getElementById('wlist');
             el.innerHTML = '<option value="">-- เลือกมิเตอร์ไฟ --</option>';
             wl.innerHTML = '<option value="">-- เลือกมิเตอร์น้ำ --</option>';
             if(res.E) res.E.forEach(item => el.add(new Option(item.desc, item.id)));
             if(res.W) res.W.forEach(item => wl.add(new Option(item.desc, item.id)));
-          })
-          .catch(err => {
-            alert("โหลดรายชื่อไม่สำเร็จ กรุณาตรวจสอบลิงก์ Web App");
           });
       }
 
       function onPick(group) {
-        const status = document.getElementById('status');
-        status.textContent = '';
-        document.getElementById('currMeta').textContent = '';
-
-        if (group === 'E') {
-          document.getElementById('wlist').selectedIndex = 0;
-          const id = document.getElementById('elist').value;
-          if (id) loadInfo(id);
-        } else {
-          document.getElementById('elist').selectedIndex = 0;
-          const id = document.getElementById('wlist').value;
-          if (id) loadInfo(id);
-        }
+        if (group === 'E') document.getElementById('wlist').selectedIndex = 0;
+        else document.getElementById('elist').selectedIndex = 0;
+        const id = (group === 'E' ? document.getElementById('elist') : document.getElementById('wlist')).value;
+        if (id) loadInfo(id);
       }
 
       function loadInfo(id) {
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "⏳ กำลังดึงข้อมูล...";
-        btn.disabled = true;
-
+        document.getElementById('saveBtn').disabled = true;
         fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
           .then(r => r.json())
           .then(res => {
@@ -152,27 +108,10 @@
             document.getElementById('lastValue').value = lastVal;
             document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '';
             document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
-
-            const newInput = document.getElementById('newValue');
-            if (res.currValue !== '' && res.currValue != null) {
-              newInput.value = res.currValue;
-            } else {
-              newInput.value = lastVal; 
-            }
-
+            document.getElementById('newValue').value = (res.currValue !== '' && res.currValue != null) ? res.currValue : lastVal;
             updateDiff();
-
-            if (res.currNote) {
-              document.getElementById('currMeta').textContent = `* หมายเหตุเดิม: ${res.currNote}`;
-            }
-
-            btn.innerText = "💾 บันทึกข้อมูล";
-            btn.disabled = false;
-          })
-          .catch(err => {
-            alert('ดึงข้อมูลล้มเหลว: ' + err.message);
-            btn.innerText = "💾 บันทึกข้อมูล";
-            btn.disabled = false;
+            document.getElementById('currMeta').textContent = res.currNote ? `* หมายเหตุเดิม: ${res.currNote}` : '';
+            document.getElementById('saveBtn').disabled = false;
           });
       }
 
@@ -184,102 +123,64 @@
         diffElem.style.color = diff < 0 ? '#dc3545' : '#0d6efd'; 
       }
 
-async function saveData() {
+      async function saveData() {
         const id = document.getElementById('elist').value || document.getElementById('wlist').value;
         const val = Number(document.getElementById('newValue').value || 0);
-        const status = document.getElementById('status');
-        const btn = document.getElementById('saveBtn');
+        const status = document.getElementById('status'), btn = document.getElementById('saveBtn');
         
-        if (!id) { alert('⚠️ กรุณาเลือกรายการมิเตอร์ก่อนบันทึก'); return; }
-
-        if (document.getElementById('lastValue').value !== '' && val < lastVal) {
-          alert('⚠️ ค่าปัจจุบัน ต้องมากกว่าหรือเท่ากับค่าของเดือนก่อนหน้าเสมอ');
-          return;
-        }
-
-        btn.innerText = '⏳ กำลังบันทึก...';
-        btn.disabled = true;
-        status.style.color = "#333";
-        status.textContent = '⏳ กำลังวิเคราะห์และบันทึกข้อมูล...';
+        if (!id) return alert('⚠️ กรุณาเลือกรายการ');
+        btn.innerText = '⏳ กำลังบันทึก...'; btn.disabled = true;
 
         try {
-            // 1. ดึง IP (มีระบบตัวสำรอง ป้องกันการโดนบล็อกจาก Firefox / Adblocker)
+            // 1. ดึง IP พร้อมระบบสำรอง (Fallback)
             let ip = "Unknown IP";
-            const ipServices = [
-                'https://api.ipify.org?format=json',
-                'https://ipinfo.io/json',
-				'https://jsonip.com/',
-                'https://api.seeip.org/jsonip'
-            ];
-
+            const ipServices = ['https://api.ipify.org?format=json','https://ipinfo.io/json', 'https://jsonip.com/', 'https://api.seeip.org/jsonip'];
             for (let url of ipServices) {
                 try {
-                    const ipRes = await fetch(url);
-                    const ipData = await ipRes.json();
-                    if (ipData.ip) {
-                        ip = ipData.ip;
-                        break; // ได้ IP แล้วหยุดวนลูปทันที
-                    }
-                } catch (ipErr) {
-                    console.warn(`ดึง IP จาก ${url} ไม่สำเร็จ กำลังลองเว็บถัดไป...`);
-                }
+                    const r = await fetch(url); const d = await r.json();
+                    if (d.ip) { ip = d.ip; break; }
+                } catch (e) {}
             }
 
-            // 2. วิเคราะห์เครื่อง, เบราว์เซอร์ และชื่อผู้ใช้
+            // 2. วิเคราะห์เครื่อง
             const ua = navigator.userAgent;
-            const displayName = userProfile ? userProfile.displayName : "Unknown Name";
+            const isMobile = /Mobi|Android|iPhone/i.test(ua);
+            const isLine = /Line/i.test(ua);
+            const os = navigator.platform;
             
-            // เช็คระบบปฏิบัติการ (OS / Device)
-            let os = "Unknown OS";
-            if (ua.indexOf("Win") != -1) os = "Windows";
-            if (ua.indexOf("Mac") != -1) os = "MacOS";
-            if (/Android/.test(ua)) os = "Android";
-            if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
-
-            // เช็คเบราว์เซอร์
-            let browser = "Unknown Browser";
-            if (/Chrome/.test(ua) && !/Edge/.test(ua)) browser = "Chrome";
-            if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = "Safari";
-            if (/Firefox/.test(ua)) browser = "Firefox";
-            if (/Edge/.test(ua)) browser = "Edge";
-            if (/Line/i.test(ua)) browser = "LINE Browser";
-
-            let isMobile = /Mobi|Android|iPhone/i.test(ua);
-
-            // 3. จัดรูปแบบข้อความลง Note ตามเงื่อนไข
+            // 3. สร้าง Note ตามเงื่อนไข PC/Mobile
             let noteString = "";
             if (isMobile) {
-                // รูปแบบ Mobile: line_displayname, device (iOS/Android), IP
-                noteString = `(Mobile) ${displayName}, ${os}, ${ip}`;
+                const displayName = userProfile ? userProfile.displayName : "Unknown Mobile";
+                const device = ua.match(/\(([^)]+)\)/) ? ua.match(/\(([^)]+)\)/)[1].split(';')[0] : "Mobile";
+                if (isLine) {
+                    noteString = `(mobile LINE app) ${displayName},${device},${os},LINE,${ip}`;
+                } else {
+                    const displaySize = `${window.screen.width}x${window.screen.height}`;
+                    noteString = `(mobile) ${displaySize},${device},${os},Browser,${ip}`;
+                }
             } else {
-                // รูปแบบ PC: OS, type of browser, IP
-                noteString = `(PC) ${os}, ${browser}, ${ip}`;
+                // บน PC ไม่เก็บ line_displayname
+                noteString = `(PC) ${os},Browser,${ip}`;
             }
 
-            // 4. ยิง API บันทึกข้อมูลไปยัง Google Apps Script
+            // 4. บันทึกข้อมูล
             const response = await fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&ua=${encodeURIComponent(noteString)}`);
             const res = await response.json();
 
             if (res.status === 'success') {
                 status.style.color = "#198754";
-                status.textContent = `✅ บันทึกสำเร็จ • เวลา ${res.timeStr}`;
-                
-                // โหลดข้อมูลขึ้นมาใหม่เพื่อยืนยัน และพร้อมกรอกมิเตอร์ตัวต่อไป (ไม่ปิดแอป)
+                status.textContent = `✅ บันทึกสำเร็จ (${res.timeStr})`;
                 loadInfo(id); 
-            } else {
-                throw new Error(res.message);
-            }
+            } else { throw new Error(res.message); }
         } catch (err) {
             status.style.color = "#dc3545";
-            status.textContent = '❌ บันทึกล้มเหลว: ' + err.message;
+            status.textContent = '❌ ล้มเหลว: ' + err.message;
         } finally {
-            // คืนสถานะปุ่มกลับมาให้กดได้อีกครั้ง
-            btn.innerText = '💾 บันทึกข้อมูล';
-            btn.disabled = false;
+            btn.innerText = '💾 บันทึกข้อมูล'; btn.disabled = false;
         }
       }
 
-      // รันเมื่อโหลดหน้าเว็บเสร็จ
       window.onload = main;
     </script>
   </body>
