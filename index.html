@@ -184,13 +184,13 @@
         diffElem.style.color = diff < 0 ? '#dc3545' : '#0d6efd'; 
       }
 
-      async function saveData() {
+async function saveData() {
         const id = document.getElementById('elist').value || document.getElementById('wlist').value;
         const val = Number(document.getElementById('newValue').value || 0);
         const status = document.getElementById('status');
         const btn = document.getElementById('saveBtn');
         
-        if (!id) { alert('⚠️ กรุณาเลือกรายการก่อนบันทึก'); return; }
+        if (!id) { alert('⚠️ กรุณาเลือกรายการมิเตอร์ก่อนบันทึก'); return; }
 
         if (document.getElementById('lastValue').value !== '' && val < lastVal) {
           alert('⚠️ ค่าปัจจุบัน ต้องมากกว่าหรือเท่ากับค่าของเดือนก่อนหน้าเสมอ');
@@ -203,13 +203,13 @@
         status.textContent = '⏳ กำลังวิเคราะห์และบันทึกข้อมูล...';
 
         try {
-// 1. ดึง IP (อัปเกรด: เพิ่มตัวสำรองกรณี Firefox หรือ Adblocker บล็อก)
+            // 1. ดึง IP (มีระบบตัวสำรอง ป้องกันการโดนบล็อกจาก Firefox / Adblocker)
             let ip = "Unknown IP";
             const ipServices = [
-                'https://api.ipify.org?format=json', // เจ้าที่ 1
-                'https://ipinfo.io/json',            // เจ้าที่ 2 (ตัวสำรอง)
-				'https://api.seeip.org/jsonip',      // เจ้าที่ 3 (ตัวสำรอง)
-				'https://jsonip.com/'               // เจ้าที่ 4 (ตัวสำรอง)
+                'https://api.ipify.org?format=json',
+                'https://ipinfo.io/json',
+				'https://jsonip.com/',
+                'https://api.seeip.org/jsonip'
             ];
 
             for (let url of ipServices) {
@@ -218,43 +218,53 @@
                     const ipData = await ipRes.json();
                     if (ipData.ip) {
                         ip = ipData.ip;
-                        break; // ถ้าดึง IP สำเร็จแล้ว ให้หยุดและข้ามตัวสำรองไปเลย
+                        break; // ได้ IP แล้วหยุดวนลูปทันที
                     }
                 } catch (ipErr) {
-                    console.warn(`ดึง IP จาก ${url} ถูกบล็อก กำลังลองเว็บถัดไป...`);
+                    console.warn(`ดึง IP จาก ${url} ไม่สำเร็จ กำลังลองเว็บถัดไป...`);
                 }
             }
 
-            // 2. วิเคราะห์เครื่องและเบราว์เซอร์
+            // 2. วิเคราะห์เครื่อง, เบราว์เซอร์ และชื่อผู้ใช้
             const ua = navigator.userAgent;
-            const displayName = userProfile ? userProfile.displayName : "Admin (PC)";
-            const os = navigator.platform;
-            let isMobile = /Mobi|Android|iPhone/i.test(ua);
-            let isLine = /Line/i.test(ua);
+            const displayName = userProfile ? userProfile.displayName : "Unknown Name";
+            
+            // เช็คระบบปฏิบัติการ (OS / Device)
+            let os = "Unknown OS";
+            if (ua.indexOf("Win") != -1) os = "Windows";
+            if (ua.indexOf("Mac") != -1) os = "MacOS";
+            if (/Android/.test(ua)) os = "Android";
+            if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
 
+            // เช็คเบราว์เซอร์
+            let browser = "Unknown Browser";
+            if (/Chrome/.test(ua) && !/Edge/.test(ua)) browser = "Chrome";
+            if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = "Safari";
+            if (/Firefox/.test(ua)) browser = "Firefox";
+            if (/Edge/.test(ua)) browser = "Edge";
+            if (/Line/i.test(ua)) browser = "LINE Browser";
+
+            let isMobile = /Mobi|Android|iPhone/i.test(ua);
+
+            // 3. จัดรูปแบบข้อความลง Note ตามเงื่อนไข
             let noteString = "";
             if (isMobile) {
-                let deviceMatch = ua.match(/\(([^)]+)\)/);
-                let device = deviceMatch ? deviceMatch[1].split(';')[0] : "Mobile";
-                
-                if (isLine) {
-                    noteString = `(mobile LINE app) ${displayName},${device},${os},LINE,${ip}`;
-                } else {
-                    let displaySize = `${window.screen.width}x${window.screen.height}`;
-                    noteString = `(mobile) ${displaySize},${device},${os},Browser,${ip}`;
-                }
+                // รูปแบบ Mobile: line_displayname, device (iOS/Android), IP
+                noteString = `(Mobile) ${displayName}, ${os}, ${ip}`;
             } else {
-                noteString = `(PC) PC/Laptop,${os},Browser,${ip}`;
+                // รูปแบบ PC: OS, type of browser, IP
+                noteString = `(PC) ${os}, ${browser}, ${ip}`;
             }
 
-            // 3. ยิง API บันทึกข้อมูล
+            // 4. ยิง API บันทึกข้อมูลไปยัง Google Apps Script
             const response = await fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&ua=${encodeURIComponent(noteString)}`);
             const res = await response.json();
 
             if (res.status === 'success') {
                 status.style.color = "#198754";
                 status.textContent = `✅ บันทึกสำเร็จ • เวลา ${res.timeStr}`;
-                // 📌 เปลี่ยนจากการปิดแอป (liff.closeWindow) เป็นการดึงข้อมูลใหม่เพื่อกรอกลูกค้ารายต่อไป
+                
+                // โหลดข้อมูลขึ้นมาใหม่เพื่อยืนยัน และพร้อมกรอกมิเตอร์ตัวต่อไป (ไม่ปิดแอป)
                 loadInfo(id); 
             } else {
                 throw new Error(res.message);
@@ -263,6 +273,7 @@
             status.style.color = "#dc3545";
             status.textContent = '❌ บันทึกล้มเหลว: ' + err.message;
         } finally {
+            // คืนสถานะปุ่มกลับมาให้กดได้อีกครั้ง
             btn.innerText = '💾 บันทึกข้อมูล';
             btn.disabled = false;
         }
