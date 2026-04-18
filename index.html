@@ -1,224 +1,216 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>กรอก meter คลอง 3</title>
+    <title>กรอก meter คลอง 3 V1.06</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 20px; }
-      .row { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      select, input { padding: 6px; font-size: 16px; }
-      button { padding: 8px 16px; background: #4CAF50; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-      button:hover { background: #3F9A49; }
-      #diff { font-weight: bold; color: blue; }
-      #status { margin-left: 8px; }
-      .group { display: inline-flex; align-items: center; gap: 6px; }
-      label { min-width: 140px; }
-      .stack { display: flex; flex-direction: column; gap: 8px; }
-      .current-row { display: flex; align-items: center; gap: 8px; }
-      .note { color: #666; font-size: 13px; }
+      body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
+      .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+      h2 { text-align: center; color: #333; margin-top: 0; }
+      .row { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      select, input { padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; flex: 1; min-width: 150px;}
+      button { padding: 10px 20px; font-size: 16px; background: #0d6efd; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s;}
+      button:hover { background: #0b5ed7; }
+      #diff { font-weight: bold; font-size: 18px; }
+      #status { margin-top: 10px; text-align: center; font-size: 14px; font-weight: bold; color: #198754; width: 100%; display: block;}
+      .group { display: flex; flex-direction: column; width: 100%; gap: 5px; }
+      label { font-weight: bold; color: #555; }
+      .note { color: #dc3545; font-size: 13px; font-weight: bold; }
+      .readonly-input { background-color: #e9ecef; }
     </style>
   </head>
   <body>
-    <h2>กรอก meter คลอง 3 V1.05</h2>
+    <div class="container">
+      <h2>📝 กรอก meter คลอง 3 V1.06</h2>
 
-    <div class="stack">
       <div class="row">
         <div class="group">
-          <label for="elist">มิเตอร์ไฟ:</label>
-          <select id="elist" onchange="onPick('E')"></select>
+          <label for="elist">⚡ มิเตอร์ไฟ (E001–E030):</label>
+          <select id="elist" onchange="onPick('E')">
+            <option value="">⏳ กำลังโหลดข้อมูล...</option>
+          </select>
         </div>
       </div>
 
       <div class="row">
         <div class="group">
-          <label for="wlist">มิเตอร์น้ำ:</label>
-          <select id="wlist" onchange="onPick('W')"></select>
+          <label for="wlist">💧 มิเตอร์น้ำ (W001–W026):</label>
+          <select id="wlist" onchange="onPick('W')">
+            <option value="">⏳ กำลังโหลดข้อมูล...</option>
+          </select>
         </div>
       </div>
-    </div>
 
-    <div class="row">
-      <label>ค่าเดือนก่อน:</label>
-      <input id="lastValue" type="number" readonly>
-      <span id="lastMonth"></span>
-    </div>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-    <div class="row current-row">
-      <label for="newValue">ค่าปัจจุบัน:</label>
-      <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
-      <button id="saveBtn" onclick="saveData()" disabled>💾 บันทึกข้อมูล</button>
-      <span id="status"></span>
-    </div>
+      <div class="row">
+        <div class="group">
+          <label>⬅️ ค่าของเดือนก่อนหน้า <span id="lastMonth" style="font-weight: normal; color: #888;"></span> :</label>
+          <input id="lastValue" type="number" class="readonly-input" readonly>
+        </div>
+      </div>
 
-    <div class="row">
-      <label></label>
-      <span id="currMeta" class="note"></span>
-    </div>
+      <div class="row">
+        <div class="group">
+          <label for="newValue">➡️ ค่าปัจจุบัน <span id="currMonthLabel" style="font-weight: normal; color: #0d6efd;"></span> :</label>
+          <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
+          <span id="currMeta" class="note"></span>
+        </div>
+      </div>
 
-    <div class="row">
-      <label>ผลต่าง:</label>
-      <span id="diff">0</span>
+      <div class="row">
+        <div class="group" style="flex-direction: row; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+          <label style="margin: 0;">ผลต่างการใช้งาน:</label>
+          <span id="diff">0</span>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 20px;">
+        <button id="saveBtn" onclick="saveData()">💾 บันทึกข้อมูล</button>
+        <span id="status"></span>
+      </div>
     </div>
 
     <script>
-      // 📌 วาง Web App URL ที่ได้จาก Google Apps Script ที่นี่
+      // 📌 ใส่ Web App URL ของคุณที่นี่ (สำคัญมาก: ถ้าไม่ใส่จะดึงข้อมูลไม่ได้)
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn1fzH1D5Br15LdcOqS5ilwMwwJhqRe1YhxdNmMiVHHP0hRVJmqrkNsvLSqOgWwyJ/exec"; 
-      
+
       let lastVal = 0;
 
-      // โหลด 2 กลุ่มรายการ: E และ W ดึงข้อมูลผ่าน API (GET)
-      async function loadLists() {
-        try {
-          const response = await fetch(WEB_APP_URL + "?action=getLists");
-          const res = await response.json();
+      // เมื่อเปิดหน้าเว็บ โหลดข้อมูล Dropdown อัตโนมัติ
+      window.onload = function() {
+        fetch(WEB_APP_URL + "?action=getLists")
+          .then(response => response.json())
+          .then(res => {
+            const el = document.getElementById('elist');
+            const wl = document.getElementById('wlist');
 
-          const el = document.getElementById('elist');
-          const wl = document.getElementById('wlist');
+            el.innerHTML = '<option value="">-- เลือก E001–E030 --</option>';
+            wl.innerHTML = '<option value="">-- เลือก W001–W026 --</option>';
 
-          el.appendChild(new Option('-- เลือก E001–E030 --', '', true, false));
-          wl.appendChild(new Option('-- เลือก W001–W026 --', '', true, false));
-
-          (res.E || []).forEach(item => el.appendChild(new Option(item.desc, item.id)));
-          (res.W || []).forEach(item => wl.appendChild(new Option(item.desc, item.id)));
-
-          if (res.E && res.E.length) {
-            el.selectedIndex = 1;
-            onPick('E');
-          }
-        } catch (err) {
-          alert('ไม่สามารถโหลดรายชื่อได้: ' + err.message);
-        }
-      }
+            if(res.E) res.E.forEach(item => el.add(new Option(item.desc, item.id)));
+            if(res.W) res.W.forEach(item => wl.add(new Option(item.desc, item.id)));
+          })
+          .catch(err => {
+            document.getElementById('elist').innerHTML = '<option value="">❌ โหลดข้อมูลล้มเหลว</option>';
+            document.getElementById('wlist').innerHTML = '<option value="">❌ โหลดข้อมูลล้มเหลว</option>';
+            alert("เชื่อมต่อ API ไม่สำเร็จ กรุณาตรวจสอบ WEB_APP_URL");
+          });
+      };
 
       function onPick(group) {
         const el = document.getElementById('elist');
         const wl = document.getElementById('wlist');
         const status = document.getElementById('status');
         status.textContent = '';
+        document.getElementById('currMeta').textContent = '';
+
         if (group === 'E') {
-          wl.selectedIndex = 0;
+          wl.selectedIndex = 0; // reset W
           const id = el.value;
           if (id) loadInfo(id);
         } else {
-          el.selectedIndex = 0;
+          el.selectedIndex = 0; // reset E
           const id = wl.value;
           if (id) loadInfo(id);
         }
       }
 
-// โหลดข้อมูล "เดือนก่อนหน้า" และ "เดือนปัจจุบัน" (GET)
-      async function loadInfo(id) {
-        const newInput = document.getElementById('newValue');
-        const currMeta = document.getElementById('currMeta');
-        const saveBtn = document.getElementById('saveBtn');
-        const diffElem = document.getElementById('diff');
-        const lastValueInput = document.getElementById('lastValue');
+      function loadInfo(id) {
+        document.getElementById('saveBtn').innerText = "⏳ กำลังดึงข้อมูล...";
+        document.getElementById('saveBtn').disabled = true;
 
-        // --- 1. เคลียร์ข้อมูลและล็อกหน้าจอก่อนโหลด ---
-        newInput.disabled = true;           
-        saveBtn.disabled = true;            
-        newInput.value = '';                
-        newInput.placeholder = "⏳ กำลังดึงข้อมูล..."; 
-        lastValueInput.value = "";          
-        lastValueInput.placeholder = "กำลังโหลด...";
-        diffElem.textContent = "...";       
-        currMeta.textContent = '';
+        fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
+          .then(r => r.json())
+          .then(res => {
+            // เดือนก่อนหน้า
+            lastVal = Number(res.lastValue || 0);
+            document.getElementById('lastValue').value = lastVal;
+            document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
+            document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
 
-        try {
-          const response = await fetch(WEB_APP_URL + "?action=getInfo&id=" + id);
-          const res = await response.json();
+            const newInput = document.getElementById('newValue');
+            const currMeta = document.getElementById('currMeta');
 
-          // --- 🔥 คลีนข้อมูล: บังคับตัดช่องว่าง (Space) ที่อาจแฝงมาจาก Google Sheets ---
-          const rawLast = String(res.lastValue || '').trim();
-          const rawCurr = String(res.currValue || '').trim();
+            // 📌 ตรวจสอบว่าเดือนนี้มีการกรอกไปหรือยัง
+            if (res.currValue !== '' && res.currValue != null) {
+              // ถ้าเคยกรอกแล้ว ให้ดึงของเดิมมาโชว์
+              newInput.value = res.currValue;
+            } else {
+              // 📌 ถ้ายังไม่เคยกรอก ดึงค่าของเดือนที่แล้วมาดักรอไว้เลย จะได้ไม่ต้องพิมพ์ใหม่ทั้งหมด
+              newInput.value = lastVal; 
+            }
 
-          // --- 2. ข้อมูลเดือนที่แล้ว ---
-          lastVal = rawLast !== '' ? Number(rawLast) : 0;
-          lastValueInput.value = lastVal;
-          document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '(ไม่มีข้อมูลก่อนหน้า)';
+            updateDiff();
 
-          // --- 3. ข้อมูลเดือนปัจจุบัน & Auto-fill ---
-          if (rawCurr !== '') {
-            // กรณีที่ 1: ถ้าเดือนนี้มีข้อมูลแล้วจริงๆ (ไม่ใช่แค่ช่องว่าง) ให้ใช้ค่าปัจจุบัน
-            newInput.value = Number(rawCurr); 
-          } else {
-            // กรณีที่ 2: ถ้าเดือนนี้ว่างเปล่าชัวร์ๆ ให้ดึงค่าเดือนที่แล้ว (lastVal) มาใส่
-            newInput.value = lastVal > 0 ? lastVal : ''; 
-          }
+            // แจ้งเตือน Note
+            if (res.currNote) {
+              const label = res.currMonth ? res.currMonth : 'เดือนนี้';
+              currMeta.textContent = `*มีข้อมูลเดิมใน ${label} • Note: ${res.currNote}`;
+            }
 
-          // อัปเดตผลต่างทันที
-          updateDiff();
+            document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
+            document.getElementById('saveBtn').disabled = false;
+          })
+          .catch(err => {
+            alert('ดึงข้อมูลล้มเหลว: ' + err.message);
+            document.getElementById('saveBtn').innerText = "💾 บันทึกข้อมูล";
+            document.getElementById('saveBtn').disabled = false;
+          });
+      }
 
-          // แสดง Note (ถ้ามี)
-          if (res.currNote) {
-            const label = res.currMonth ? res.currMonth : 'เดือนนี้';
-            currMeta.textContent = `มีข้อมูลเดิมใน ${label} • Note: ${res.currNote}`;
-          }
-
-        } catch (err) {
-          console.error(err);
-          alert('ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง: ' + err.message);
-          newInput.placeholder = "เกิดข้อผิดพลาด";
-        } finally {
-          // --- 4. โหลดเสร็จสิ้น ปลดล็อกหน้าจอ ---
-          newInput.disabled = false;
-          saveBtn.disabled = false;
-          newInput.placeholder = "กรอกค่าปัจจุบัน";
-          newInput.focus();
-        }
-      }      
-      
       function updateDiff() {
         const newVal = Number(document.getElementById('newValue').value || 0);
         const diff = newVal - lastVal;
         const diffElem = document.getElementById('diff');
-        diffElem.textContent = diff;
-        diffElem.style.color = diff < 0 ? 'red' : 'blue';
+        
+        diffElem.textContent = diff.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        diffElem.style.color = diff < 0 ? '#dc3545' : '#0d6efd'; // แดงถ้าน้อยกว่า 0, น้ำเงินถ้าปกติ
       }
 
-      // บันทึกข้อมูล (POST)
-      async function saveData() {
+      function saveData() {
         const el = document.getElementById('elist');
         const wl = document.getElementById('wlist');
         const id = el.value || wl.value;
         const newVal = Number(document.getElementById('newValue').value || 0);
         const status = document.getElementById('status');
-
-        if (!id) { alert('กรุณาเลือกรายการจาก E หรือ W'); return; }
+        
+        if (!id) { alert('⚠️ กรุณาเลือกรายการมิเตอร์ไฟหรือน้ำก่อนบันทึก'); return; }
 
         const lastField = document.getElementById('lastValue').value;
         if (lastField !== '' && !Number.isNaN(lastVal) && newVal < lastVal) {
-          alert('ค่าปัจจุบันต้องมากกว่าหรือเท่ากับเดือนก่อนหน้า');
+          alert('⚠️ ค่าปัจจุบัน ต้องมากกว่าหรือเท่ากับค่าของเดือนก่อนหน้าเสมอ');
           return;
         }
 
-        status.textContent = '⏳ กำลังบันทึก...';
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = '⏳ กำลังบันทึก...';
+        btn.disabled = true;
+        status.style.color = "#333";
+        status.textContent = 'กำลังส่งข้อมูล...';
+
         const ua = navigator.userAgent || '';
-
-        try {
-          // ใช้ Content-Type text/plain เพื่อหลีกเลี่ยงปัญหา CORS preflight
-          const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ id: id, newValue: newVal, userAgent: ua }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        
+        // ส่งข้อมูลผ่าน API
+        fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${newVal}&ua=${encodeURIComponent(ua)}`)
+          .then(r => r.json())
+          .then(res => {
+            if(res.status === 'success') {
+                status.style.color = "#198754";
+                status.textContent = `✅ บันทึกสำเร็จ • เวลา ${res.timeStr || new Date().toLocaleTimeString('th-TH')}`;
+                loadInfo(id); // ดึงข้อมูลกลับมาเช็คความถูกต้องอีกรอบ
+            } else {
+                throw new Error(res.message || "บันทึกไม่สำเร็จ");
+            }
+          })
+          .catch(err => {
+            status.style.color = "#dc3545";
+            status.textContent = '❌ บันทึกล้มเหลว: ' + err.message;
+            btn.innerText = '💾 บันทึกข้อมูล';
+            btn.disabled = false;
           });
-          
-          const res = await response.json();
-
-          if (res.status === 'success') {
-            status.textContent = `${res.data.message} • เวลา ${res.data.timeStr}`;
-            loadInfo(id); 
-          } else {
-            status.textContent = '❌ ' + res.message;
-          }
-        } catch (err) {
-          status.textContent = '❌ ดึงข้อมูลล้มเหลว: ' + err.message;
-        }
       }
-
-      // เริ่มทำงานเมื่อเปิดหน้าเว็บ
-      window.onload = loadLists;
     </script>
   </body>
 </html>
