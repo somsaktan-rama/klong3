@@ -6,83 +6,104 @@
     <title>กรอก meter คลอง 3 (LIFF)</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-      /* ใช้ Style เดิมจากโค้ดของคุณ [cite: 24-35] */
-      body { font-family: 'Segoe UI', Sarabun, sans-serif; margin: 20px; background-color: #f9f9f9;}
+      body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
       .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+      h2 { text-align: center; color: #333; margin-top: 0; }
       .row { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-      select, input { padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; flex: 1; }
-      button { padding: 10px 20px; background: #0d6efd; color: #fff; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
-      #status { margin-top: 10px; text-align: center; font-weight: bold; width: 100%; display: block;}
+      select, input { padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; flex: 1; min-width: 150px;}
+      button { padding: 10px 20px; font-size: 16px; background: #0d6efd; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s;}
+      button:hover { background: #0b5ed7; }
+      button:disabled { background: #6c757d; cursor: not-allowed; }
+      #diff { font-weight: bold; font-size: 18px; }
+      #status { margin-top: 10px; text-align: center; font-size: 14px; font-weight: bold; width: 100%; display: block;}
       .group { display: flex; flex-direction: column; width: 100%; gap: 5px; }
-      label { font-weight: bold; }
+      label { font-weight: bold; color: #555; }
+      .note { color: #dc3545; font-size: 13px; font-weight: bold; }
+      .readonly-input { background-color: #e9ecef; }
       .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 10px; background: #e7f3ff; border-radius: 8px; }
       .user-info img { width: 40px; height: 40px; border-radius: 50%; }
     </style>
   </head>
   <body>
     <div class="container">
-      <h2>📝 บันทึกมิเตอร์ (LIFF Mode)</h2>
+      <h2>📝 บันทึกมิเตอร์ Klong 3</h2>
 
       <div id="lineProfile" class="user-info" style="display:none;">
         <img id="profileImg" src="" alt="profile">
-        <div>สวัสดีคุณ: <span id="lineName" style="font-weight:bold;">...</span></div>
+        <div>เข้าสู่ระบบโดย: <span id="lineName" style="font-weight:bold; color:#0d6efd;">...</span></div>
       </div>
 
       <div class="row">
         <div class="group">
           <label for="elist">⚡ มิเตอร์ไฟ (E):</label>
-          <select id="elist" onchange="onPick('E')"></select>
+          <select id="elist" onchange="onPick('E')">
+            <option value="">⏳ กำลังโหลดข้อมูล...</option>
+          </select>
         </div>
       </div>
 
       <div class="row">
         <div class="group">
           <label for="wlist">💧 มิเตอร์น้ำ (W):</label>
-          <select id="wlist" onchange="onPick('W')"></select>
+          <select id="wlist" onchange="onPick('W')">
+            <option value="">⏳ กำลังโหลดข้อมูล...</option>
+          </select>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+      <div class="row">
+        <div class="group">
+          <label>⬅️ ค่าของเดือนก่อนหน้า <span id="lastMonth" style="font-weight: normal; color: #888;"></span> :</label>
+          <input id="lastValue" type="number" class="readonly-input" readonly>
         </div>
       </div>
 
       <div class="row">
         <div class="group">
-          <label>ค่าเดือนก่อนหน้า:</label>
-          <input id="lastValue" type="number" readonly style="background:#eee;">
+          <label for="newValue">➡️ ค่าปัจจุบัน <span id="currMonthLabel" style="font-weight: normal; color: #0d6efd;"></span> :</label>
+          <input id="newValue" type="number" inputmode="decimal" step="any" oninput="updateDiff()" placeholder="กรอกค่าปัจจุบัน">
+          <span id="currMeta" class="note"></span>
         </div>
       </div>
 
       <div class="row">
-        <div class="group">
-          <label>ค่าปัจจุบัน:</label>
-          <input id="newValue" type="number" inputmode="decimal" oninput="updateDiff()">
+        <div class="group" style="flex-direction: row; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+          <label style="margin: 0;">ผลต่างการใช้งาน:</label>
+          <span id="diff">0</span>
         </div>
       </div>
 
-      <div class="row">
-        <div class="group">
-          <label>ผลต่าง: <span id="diff">0</span></label>
-        </div>
+      <div class="row" style="margin-top: 20px;">
+        <button id="saveBtn" onclick="saveData()">💾 บันทึกข้อมูล</button>
+        <span id="status"></span>
       </div>
-
-      <button id="saveBtn" onclick="saveData()">💾 บันทึกข้อมูล</button>
-      <span id="status"></span>
     </div>
 
     <script>
+      // 📌 ใส่ Web App URL และ LIFF ID
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzklH6nDFcGYXz7UqZyqaQnmQSs8ERptGMz6adRaB07lfzNnEEPjcN5DEq4V10L6spK/exec"; 
-      const LIFF_ID = "2009770064-DQfU7Y80"; // 📌 ใส่ LIFF ID ที่ได้จาก LINE Developers
+      const LIFF_ID = "2009770064-DQfU7Y80"; 
 
       let userProfile = null;
       let lastVal = 0;
 
-      // 📌 เริ่มต้นใช้งาน LIFF
+      // เริ่มต้นระบบ LIFF
       async function main() {
-        await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          userProfile = await liff.getProfile();
-          document.getElementById('lineProfile').style.display = 'flex';
-          document.getElementById('lineName').textContent = userProfile.displayName;
-          document.getElementById('profileImg').src = userProfile.pictureUrl;
-        } else {
-          liff.login();
+        try {
+          await liff.init({ liffId: LIFF_ID });
+          if (liff.isLoggedIn()) {
+            userProfile = await liff.getProfile();
+            document.getElementById('lineProfile').style.display = 'flex';
+            document.getElementById('lineName').textContent = userProfile.displayName;
+            document.getElementById('profileImg').src = userProfile.pictureUrl;
+          } else {
+            // ถ้าเปิดบน PC หรือ Browser นอก LINE ให้ทำการล็อกอิน
+            liff.login();
+          }
+        } catch (err) {
+          console.warn("LIFF Init Failed (อาจเปิดบนบราวเซอร์ที่ไม่รองรับ):", err);
         }
         loadLists();
       }
@@ -95,65 +116,148 @@
             const wl = document.getElementById('wlist');
             el.innerHTML = '<option value="">-- เลือกมิเตอร์ไฟ --</option>';
             wl.innerHTML = '<option value="">-- เลือกมิเตอร์น้ำ --</option>';
-            res.E.forEach(item => el.add(new Option(item.desc, item.id)));
-            res.W.forEach(item => wl.add(new Option(item.desc, item.id)));
+            if(res.E) res.E.forEach(item => el.add(new Option(item.desc, item.id)));
+            if(res.W) res.W.forEach(item => wl.add(new Option(item.desc, item.id)));
+          })
+          .catch(err => {
+            alert("โหลดรายชื่อไม่สำเร็จ กรุณาตรวจสอบลิงก์ Web App");
           });
       }
 
       function onPick(group) {
-        const id = (group === 'E') ? document.getElementById('elist').value : document.getElementById('wlist').value;
-        if (group === 'E') document.getElementById('wlist').selectedIndex = 0;
-        else document.getElementById('elist').selectedIndex = 0;
-        if (id) loadInfo(id);
+        const status = document.getElementById('status');
+        status.textContent = '';
+        document.getElementById('currMeta').textContent = '';
+
+        if (group === 'E') {
+          document.getElementById('wlist').selectedIndex = 0;
+          const id = document.getElementById('elist').value;
+          if (id) loadInfo(id);
+        } else {
+          document.getElementById('elist').selectedIndex = 0;
+          const id = document.getElementById('wlist').value;
+          if (id) loadInfo(id);
+        }
       }
 
       function loadInfo(id) {
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "⏳ กำลังดึงข้อมูล...";
+        btn.disabled = true;
+
         fetch(WEB_APP_URL + "?action=getInfo&id=" + id)
           .then(r => r.json())
           .then(res => {
             lastVal = Number(res.lastValue || 0);
             document.getElementById('lastValue').value = lastVal;
-            document.getElementById('newValue').value = res.currValue || lastVal;
+            document.getElementById('lastMonth').textContent = res.lastMonth ? `(${res.lastMonth})` : '';
+            document.getElementById('currMonthLabel').textContent = res.currMonth ? `(${res.currMonth})` : '';
+
+            const newInput = document.getElementById('newValue');
+            if (res.currValue !== '' && res.currValue != null) {
+              newInput.value = res.currValue;
+            } else {
+              newInput.value = lastVal; 
+            }
+
             updateDiff();
+
+            if (res.currNote) {
+              document.getElementById('currMeta').textContent = `* หมายเหตุเดิม: ${res.currNote}`;
+            }
+
+            btn.innerText = "💾 บันทึกข้อมูล";
+            btn.disabled = false;
+          })
+          .catch(err => {
+            alert('ดึงข้อมูลล้มเหลว: ' + err.message);
+            btn.innerText = "💾 บันทึกข้อมูล";
+            btn.disabled = false;
           });
       }
 
       function updateDiff() {
         const newVal = Number(document.getElementById('newValue').value || 0);
-        document.getElementById('diff').textContent = (newVal - lastVal).toFixed(2);
+        const diff = newVal - lastVal;
+        const diffElem = document.getElementById('diff');
+        diffElem.textContent = diff.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        diffElem.style.color = diff < 0 ? '#dc3545' : '#0d6efd'; 
       }
 
       async function saveData() {
         const id = document.getElementById('elist').value || document.getElementById('wlist').value;
-        const val = document.getElementById('newValue').value;
+        const val = Number(document.getElementById('newValue').value || 0);
         const status = document.getElementById('status');
+        const btn = document.getElementById('saveBtn');
         
-        if (!id) return alert('กรุณาเลือกรายการ');
+        if (!id) { alert('⚠️ กรุณาเลือกรายการก่อนบันทึก'); return; }
 
-        status.textContent = '⏳ กำลังบันทึก...';
+        if (document.getElementById('lastValue').value !== '' && val < lastVal) {
+          alert('⚠️ ค่าปัจจุบัน ต้องมากกว่าหรือเท่ากับค่าของเดือนก่อนหน้าเสมอ');
+          return;
+        }
 
-        // 1. ดึง IP
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
+        btn.innerText = '⏳ กำลังบันทึก...';
+        btn.disabled = true;
+        status.style.color = "#333";
+        status.textContent = '⏳ กำลังวิเคราะห์และบันทึกข้อมูล...';
 
-        // 2. ข้อมูลเครื่องและ LINE
-        const ua = navigator.userAgent;
-        const displayName = userProfile ? userProfile.displayName : "Unknown";
-        const displaySize = `${window.screen.width}x${window.screen.height}`;
-        
-        // 📌 จัดรูปแบบ Note ตามโจทย์: (mobile LINE app) line_displayname,device,OS,browser,IP
-        let noteString = `(mobile LINE app) ${displayName},${displaySize},${navigator.platform},LINE,${ipData.ip}`;
+        try {
+            // 1. ดึง IP (ใส่ Try-Catch ป้องกัน PC บางเครื่องบล็อกการดึง IP)
+            let ip = "Unknown IP";
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                ip = ipData.ip;
+            } catch (ipErr) {
+                console.warn("ไม่สามารถดึง IP ได้ (อาจติด Adblocker)");
+            }
 
-        // 3. ยิง API บันทึก (ใช้ action saveValue ที่แก้ใหม่ใน code.gs )
-        fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&ua=${encodeURIComponent(noteString)}`)
-          .then(r => r.json())
-          .then(res => {
-            status.textContent = '✅ บันทึกสำเร็จ: ' + res.timeStr;
-            liff.closeWindow(); // ปิดหน้าต่าง LIFF ทันทีเมื่อเสร็จ
-          });
+            // 2. วิเคราะห์เครื่องและเบราว์เซอร์
+            const ua = navigator.userAgent;
+            const displayName = userProfile ? userProfile.displayName : "Admin (PC)";
+            const os = navigator.platform;
+            let isMobile = /Mobi|Android|iPhone/i.test(ua);
+            let isLine = /Line/i.test(ua);
+
+            let noteString = "";
+            if (isMobile) {
+                let deviceMatch = ua.match(/\(([^)]+)\)/);
+                let device = deviceMatch ? deviceMatch[1].split(';')[0] : "Mobile";
+                
+                if (isLine) {
+                    noteString = `(mobile LINE app) ${displayName},${device},${os},LINE,${ip}`;
+                } else {
+                    let displaySize = `${window.screen.width}x${window.screen.height}`;
+                    noteString = `(mobile) ${displaySize},${device},${os},Browser,${ip}`;
+                }
+            } else {
+                noteString = `(PC) PC/Laptop,${os},Browser,${ip}`;
+            }
+
+            // 3. ยิง API บันทึกข้อมูล
+            const response = await fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&ua=${encodeURIComponent(noteString)}`);
+            const res = await response.json();
+
+            if (res.status === 'success') {
+                status.style.color = "#198754";
+                status.textContent = `✅ บันทึกสำเร็จ • เวลา ${res.timeStr}`;
+                // 📌 เปลี่ยนจากการปิดแอป (liff.closeWindow) เป็นการดึงข้อมูลใหม่เพื่อกรอกลูกค้ารายต่อไป
+                loadInfo(id); 
+            } else {
+                throw new Error(res.message);
+            }
+        } catch (err) {
+            status.style.color = "#dc3545";
+            status.textContent = '❌ บันทึกล้มเหลว: ' + err.message;
+        } finally {
+            btn.innerText = '💾 บันทึกข้อมูล';
+            btn.disabled = false;
+        }
       }
 
-      main();
+      // รันเมื่อโหลดหน้าเว็บเสร็จ
+      window.onload = main;
     </script>
   </body>
 </html>
