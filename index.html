@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกมิเตอร์ Klong 3</title>
+    <title id="pageTitle">บันทึกมิเตอร์คลอง 3</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 20px; background-color: #f9f9f9;}
@@ -24,7 +24,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>📝 บันทึกมิเตอร์คลอง 3</h2>
+      <h2 id="pageHeader">📝 บันทึกมิเตอร์คลอง 3</h2>
 
       <div id="lineProfile" class="user-info" style="display:none;">
         <img id="profileImg" src="" alt="profile">
@@ -67,11 +67,8 @@
             document.getElementById('lineName').textContent = userProfile.displayName;
             document.getElementById('profileImg').src = userProfile.pictureUrl;
           } else {
-            if (isMobile) {
-              liff.login(); // บังคับ Login เฉพาะบนมือถือ
-            } else {
-              document.getElementById('pcMode').style.display = 'block'; // บน PC แสดงสถานะโหมดดูแล
-            }
+            if (isMobile) liff.login();
+            else document.getElementById('pcMode').style.display = 'block';
           }
         } catch (err) {
           console.warn("LIFF Init Failed:", err);
@@ -84,6 +81,12 @@
         fetch(WEB_APP_URL + "?action=getLists")
           .then(r => r.json())
           .then(res => {
+            // 📌 อัปเดต Title และ Header ด้วยเดือน-ปี ปัจจุบัน
+            if (res.currentMonthTitle) {
+               document.getElementById('pageTitle').innerText = "บันทึกมิเตอร์คลอง 3: " + res.currentMonthTitle;
+               document.getElementById('pageHeader').innerText = "📝 บันทึกมิเตอร์คลอง 3: " + res.currentMonthTitle;
+            }
+
             const el = document.getElementById('elist'), wl = document.getElementById('wlist');
             el.innerHTML = '<option value="">-- เลือกมิเตอร์ไฟ --</option>';
             wl.innerHTML = '<option value="">-- เลือกมิเตอร์น้ำ --</option>';
@@ -126,15 +129,15 @@
       async function saveData() {
         const id = document.getElementById('elist').value || document.getElementById('wlist').value;
         const val = Number(document.getElementById('newValue').value || 0);
+        const diff = val - lastVal; // 📌 คำนวณผลต่าง
         const status = document.getElementById('status'), btn = document.getElementById('saveBtn');
         
         if (!id) return alert('⚠️ กรุณาเลือกรายการ');
         btn.innerText = '⏳ กำลังบันทึก...'; btn.disabled = true;
 
         try {
-            // 1. ดึง IP พร้อมระบบสำรอง (Fallback)
             let ip = "Unknown IP";
-            const ipServices = ['https://api.ipify.org?format=json','https://ipinfo.io/json', 'https://jsonip.com/', 'https://api.seeip.org/jsonip'];
+            const ipServices = ['https://api.ipify.org?format=json', 'https://jsonip.com/', 'https://api.seeip.org/jsonip'];
             for (let url of ipServices) {
                 try {
                     const r = await fetch(url); const d = await r.json();
@@ -142,30 +145,23 @@
                 } catch (e) {}
             }
 
-            // 2. วิเคราะห์เครื่อง
             const ua = navigator.userAgent;
             const isMobile = /Mobi|Android|iPhone/i.test(ua);
             const isLine = /Line/i.test(ua);
             const os = navigator.platform;
             
-            // 3. สร้าง Note ตามเงื่อนไข PC/Mobile
             let noteString = "";
             if (isMobile) {
                 const displayName = userProfile ? userProfile.displayName : "Unknown Mobile";
                 const device = ua.match(/\(([^)]+)\)/) ? ua.match(/\(([^)]+)\)/)[1].split(';')[0] : "Mobile";
-                if (isLine) {
-                    noteString = `(mobile LINE app) ${displayName},${device},${os},LINE,${ip}`;
-                } else {
-                    const displaySize = `${window.screen.width}x${window.screen.height}`;
-                    noteString = `(mobile) ${displaySize},${device},${os},Browser,${ip}`;
-                }
+                if (isLine) noteString = `(mobile LINE app) ${displayName},${device},${os},LINE,${ip}`;
+                else noteString = `(mobile) ${window.screen.width}x${window.screen.height},${device},${os},Browser,${ip}`;
             } else {
-                // บน PC ไม่เก็บ line_displayname
                 noteString = `(PC) ${os},Browser,${ip}`;
             }
 
-            // 4. บันทึกข้อมูล
-            const response = await fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&ua=${encodeURIComponent(noteString)}`);
+            // 📌 ยิง API แนบค่า diff ไปด้วยเพื่อเซฟลงชีต Usage
+            const response = await fetch(`${WEB_APP_URL}?action=saveValue&id=${id}&val=${val}&diff=${diff}&ua=${encodeURIComponent(noteString)}`);
             const res = await response.json();
 
             if (res.status === 'success') {
