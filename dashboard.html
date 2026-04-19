@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.38</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,7 +31,6 @@
         
         .chart-container { width: 100%; max-width: 700px; margin: 15px auto; position: relative; height: 250px; }
 
-        /* 📌 โหมดพิมพ์ บังคับตัด URL, จัดลง A4 และล็อกขนาดกราฟ */
         @media print {
             @page { size: A4 portrait; margin: 0; } 
             
@@ -47,28 +46,16 @@
             .inv-table { margin-bottom: 10px; font-size: 13px; }
             .inv-table th, .inv-table td { padding: 4px 8px; }
             
-            /* 📌 ล็อกความสูงกราฟอย่างเด็ดขาด ป้องกันการล้น (Overflow) */
             .chart-container { 
                 height: 160px !important; 
                 max-height: 160px !important; 
-                margin: 10px auto 40px auto !important; /* เพิ่มระยะห่างด้านล่างเป็น 40px */
+                margin: 10px auto 40px auto !important; 
                 page-break-inside: avoid; 
                 overflow: hidden !important; 
             }
-            .chart-container canvas {
-                height: 160px !important;
-                max-height: 160px !important;
-            }
+            .chart-container canvas { height: 160px !important; max-height: 160px !important; }
             
-            /* 📌 ผลักหมายเหตุลงมาให้พ้นรัศมีกราฟ */
-            .note-section { 
-                margin-top: 30px !important; 
-                padding: 8px 12px; 
-                font-size: 12px; 
-                page-break-inside: avoid; 
-                clear: both; 
-                position: relative;
-            }
+            .note-section { margin-top: 30px !important; padding: 8px 12px; font-size: 12px; page-break-inside: avoid; clear: both; position: relative;}
             .inv-footer { margin-top: 15px; page-break-inside: avoid; }
         }
     </style>
@@ -77,7 +64,7 @@
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.38</h2>
+        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39</h2>
         <button class="btn btn-outline-secondary fw-bold" onclick="refreshData(this)">🔄 รีเฟรชข้อมูล</button>
     </div>
 
@@ -221,6 +208,7 @@
 </div>
 
 <script>
+    // 📌 ใส่ Web App URL ของคุณที่นี่
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzklH6nDFcGYXz7UqZyqaQnmQSs8ERptGMz6adRaB07lfzNnEEPjcN5DEq4V10L6spK/exec"; 
 
     let usageData = { headers: [], rows: [] };
@@ -233,7 +221,8 @@
     let currentBillYear = 0;
     let chartInstance = null; 
 
-    const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    // 📌 แก้ไขจากชื่อย่อ เป็นชื่อเดือนเต็ม
+    const fullMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
     function ArabicToThaiBaht(numbers) {
@@ -289,60 +278,6 @@
         } catch (e) { alert("เกิดข้อผิดพลาดในการโหลดข้อมูล"); }
     }
 
-// 📌 ฟังก์ชันตั้งค่า Dropdown เลือกเดือน (อัปเดตให้กรองเฉพาะคอลัมน์ที่มีข้อมูลจริง)
-    function setupMonth() {
-        const sel = document.getElementById('monthSelect');
-        sel.innerHTML = '';
-        let months = [];
-
-        usageData.headers.forEach((h, i) => {
-            // 1. เช็คว่าหัวคอลัมน์นี้สามารถแกะเป็น "เดือน-ปี" ได้หรือไม่
-            const parsedDate = parseMeterHeader(h);
-            
-            if (parsedDate) {
-                let hasData = false;
-
-                // 2. วิ่งตรวจเช็คข้อมูลในคอลัมน์นี้
-                for (let r = 0; r < usageData.rows.length; r++) {
-                    let row = usageData.rows[r];
-                    let id = String(row[0] || '').trim().toUpperCase();
-                    
-                    // เช็คเฉพาะลูกค้าที่เป็นรหัส E... หรือ W... เท่านั้น (ข้าม ECOMMON, WBILL ฯลฯ)
-                    if (/^E\d+$/.test(id) || /^W\d+$/.test(id)) {
-                        let cellValue = String(row[i] || '').trim();
-                        
-                        // ถ้ารายการใดรายการหนึ่งมีตัวเลข/ข้อมูล ให้ถือว่าคอลัมน์นี้มีข้อมูลแล้ว
-                        if (cellValue !== '' && cellValue !== '0') {
-                            hasData = true;
-                            break; // เจอข้อมูลแล้ว หยุดลูปเช็คคอลัมน์นี้ได้เลยเพื่อประหยัดเวลา
-                        }
-                    }
-                }
-
-                // 3. ถ้าคอลัมน์นี้มีข้อมูลจริง ถึงจะนำไปใส่ใน Dropdown
-                if (hasData) {
-                    // จัด Format ชื่อที่จะแสดงใน Dropdown ให้สวยงาม
-                    let labelName = h;
-                    if (parsedDate) {
-                        labelName = `${shortMonths[parsedDate.m - 1]} ${String(parsedDate.y).slice(-2)}`;
-                    }
-                    months.push({ name: labelName, idx: i });
-                }
-            }
-        });
-
-        // 4. นำรายการเดือนที่ได้มาเรียงลำดับจาก "เดือนล่าสุด" ขึ้นก่อน
-        if (months.length > 0) {
-            months.reverse().forEach(m => sel.add(new Option(m.name, m.idx)));
-            sel.disabled = false;
-            renderDashboard();
-        } else {
-            // กรณีที่ไม่มีข้อมูลเลย
-            sel.add(new Option("❌ ยังไม่มีข้อมูลในระบบ", ""));
-            sel.disabled = true;
-        }
-    }
-
     function parseMeterHeader(str) {
         str = String(str).trim();
         let m = 0, y = 0;
@@ -368,12 +303,54 @@
         return (m >= 1 && m <= 12 && y >= 2500) ? { m, y } : null;
     }
 
+    function setupMonth() {
+        const sel = document.getElementById('monthSelect');
+        sel.innerHTML = '';
+        let months = [];
+
+        usageData.headers.forEach((h, i) => {
+            const parsedDate = parseMeterHeader(h);
+            
+            if (parsedDate) {
+                let hasData = false;
+
+                for (let r = 0; r < usageData.rows.length; r++) {
+                    let row = usageData.rows[r];
+                    let id = String(row[0] || '').trim().toUpperCase();
+                    
+                    if (/^E\d+$/.test(id) || /^W\d+$/.test(id)) {
+                        let cellValue = String(row[i] || '').trim();
+                        if (cellValue !== '' && cellValue !== '0') {
+                            hasData = true;
+                            break; 
+                        }
+                    }
+                }
+
+                if (hasData) {
+                    // 📌 เปลี่ยนการแสดงผลเป็นชื่อเดือนเต็ม
+                    let labelName = `${fullMonths[parsedDate.m - 1]} ${String(parsedDate.y).slice(-2)}`;
+                    months.push({ name: labelName, idx: i });
+                }
+            }
+        });
+
+        if (months.length > 0) {
+            months.reverse().forEach(m => sel.add(new Option(m.name, m.idx)));
+            sel.disabled = false;
+            renderDashboard();
+        } else {
+            sel.add(new Option("❌ ยังไม่มีข้อมูลในระบบ", ""));
+            sel.disabled = true;
+        }
+    }
+
     function renderDashboard() {
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         if (isNaN(colIdx)) return;
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
         
-        let targetDate = parseMeterHeader(selectedMonthName);
+        let targetDate = parseMeterHeader(usageData.headers[colIdx]);
         let mColIdx = -1;
         let currLabel = "", prevLabel = "";
 
@@ -381,14 +358,24 @@
             currentBillMonth = targetDate.m;
             currentBillYear = targetDate.y;
 
+            let meterTargetM = targetDate.m - 1;
+            let meterTargetY = targetDate.y;
+            
+            if (meterTargetM === 0) {
+                meterTargetM = 12;
+                meterTargetY--;
+            }
+
             mColIdx = meterData.headers.findIndex(h => {
                 let p = parseMeterHeader(h);
-                return p && p.m === targetDate.m && p.y === targetDate.y;
+                return p && p.m === meterTargetM && p.y === meterTargetY;
             });
-            currLabel = `${shortMonths[targetDate.m-1]} ${String(targetDate.y).slice(-2)}`;
+            
+            // 📌 เปลี่ยนการแสดงผลในหัวข้อการใช้มิเตอร์เป็นชื่อเต็ม
+            currLabel = `${fullMonths[targetDate.m-1]} ${String(targetDate.y).slice(-2)}`;
             let pm = targetDate.m - 1, py = targetDate.y;
             if (pm === 0) { pm = 12; py--; }
-            prevLabel = `${shortMonths[pm-1]} ${String(py).slice(-2)}`;
+            prevLabel = `${fullMonths[pm-1]} ${String(py).slice(-2)}`;
         }
 
         const cfIdx = usageData.headers.findIndex(h => h.toLowerCase() === 'commonfee');
@@ -489,35 +476,27 @@
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
-// 📌 ฟังก์ชันสร้างกราฟ (ปรับปรุงให้กรองเฉพาะคอลัมน์วันที่)
     function buildTrendChart(customerName, currentMonthColIndex) {
         let labels = [];
         let elecTrend = [];
         let waterTrend = [];
 
-        // กำหนดขอบเขตการดึงข้อมูล (ย้อนหลัง 12 คอลัมน์จากเดือนที่เลือก)
         let startCol = currentMonthColIndex - 11;
         if (startCol < 0) startCol = 0; 
 
         for (let c = startCol; c <= currentMonthColIndex; c++) {
             let mName = usageData.headers[c];
-            
-            // 🔍 ตรวจสอบว่าคอลัมน์นี้เป็นวันที่หรือไม่
             let parsed = parseMeterHeader(mName);
             
-            // ถ้าไม่ใช่คอลัมน์วันที่ (เช่น ID, Name, CommonFee) ให้ข้ามไปเลย
             if (!parsed) continue;
 
-            // เพิ่มชื่อเดือนลงในแกน X
-            labels.push(`${shortMonths[parsed.m - 1]} ${String(parsed.y).slice(-2)}`);
+            // 📌 เปลี่ยนแกนกราฟเป็นชื่อเดือนเต็ม
+            labels.push(`${fullMonths[parsed.m - 1]} ${String(parsed.y).slice(-2)}`);
             
-            let sumE = 0;
-            let sumW = 0;
-            
+            let sumE = 0; let sumW = 0;
             usageData.rows.forEach(row => {
-                const name = String(row[3]).trim(); // ชื่อลูกค้าอยู่ index 3
+                const name = String(row[3]).trim();
                 const id = String(row[0] || '').toUpperCase().trim();
-                
                 if (name === customerName) {
                     if (id.startsWith('E')) sumE += Number(row[c]) || 0;
                     if (id.startsWith('W')) sumW += Number(row[c]) || 0;
@@ -556,7 +535,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 0 },
+                animation: { duration: 0 }, 
                 scales: {
                     y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'ไฟ (หน่วย)', font: { family: 'Sarabun' } } },
                     y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'น้ำ (หน่วย)', font: { family: 'Sarabun' } } }
@@ -568,7 +547,7 @@
             }
         });
     }
-	
+
     function openDetailView(index) {
         const name = customerList[index];
         currentCustomer = name;
@@ -676,7 +655,7 @@
     }
 
     function closeDetailView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.38";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
