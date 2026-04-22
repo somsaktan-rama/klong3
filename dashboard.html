@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.41</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,13 +31,15 @@
         
         .chart-container { width: 100%; max-width: 700px; margin: 15px auto; position: relative; height: 250px; }
 
-     /* 📌 โหมด Dark Theme */
+        /* ========================================= */
+        /* 📌 โหมด Dark Theme สำหรับหน้าแรก (Dashboard) */
+        /* ========================================= */
         [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
         [data-bs-theme="dark"] .card { background-color: #1e1e1e; box-shadow: 0 4px 12px rgba(255,255,255,0.05); }
         [data-bs-theme="dark"] th { background-color: #2c2c2c !important; color: #e0e0e0; border-color: #444; }
         [data-bs-theme="dark"] td { border-color: #444; color: #e0e0e0; }
         
-        /* 📌 แก้ไขแถบ "รวม:" ให้มืดลงและเข้ากับ Dark Mode */
+        /* แก้ไขแถบ "รวม:" ให้มืดลงและเข้ากับ Dark Mode */
         [data-bs-theme="dark"] .table-light,
         [data-bs-theme="dark"] .table-light th, 
         [data-bs-theme="dark"] .table-light td { 
@@ -46,17 +48,55 @@
             border-color: #444 !important; 
         }
         
-        /* 📌 ปรับสีตัวเลขให้อ่านง่ายขึ้นในหน้าจอสีดำ */
-        [data-bs-theme="dark"] .val-elec { color: #ff77b5 !important; } /* ชมพูสว่าง */
-        [data-bs-theme="dark"] .val-water { color: #4dd0e1 !important; } /* ฟ้าสว่าง */
-        [data-bs-theme="dark"] .val-total { background-color: #163820 !important; color: #4ade80 !important; } /* เขียวสว่าง พื้นหลังเขียวเข้ม */
+        /* ปรับสีตัวเลขให้อ่านง่ายขึ้นในหน้าจอสีดำ */
+        [data-bs-theme="dark"] .val-elec { color: #ff77b5 !important; } 
+        [data-bs-theme="dark"] .val-water { color: #4dd0e1 !important; } 
+        [data-bs-theme="dark"] .val-total { background-color: #163820 !important; color: #4ade80 !important; } 
         
         [data-bs-theme="dark"] .bg-light { background-color: #1e1e1e !important; }
         [data-bs-theme="dark"] .bg-white { background-color: #2a2a2a !important; color: #fff !important; }
         [data-bs-theme="dark"] .text-dark { color: #e0e0e0 !important; }
         [data-bs-theme="dark"] .text-muted { color: #a0a0a0 !important; }
-		
+
+        /* ========================================= */
+        /* 📌 โหมด Dark Theme สำหรับหน้าบิล (ใบแจ้งหนี้) */
+        /* ========================================= */
+        [data-bs-theme="dark"] #detailArea { 
+            background-color: #1a1a1a !important; 
+            color: #e0e0e0 !important; 
+        }
+        [data-bs-theme="dark"] .inv-header div, 
+        [data-bs-theme="dark"] .inv-info { 
+            color: #e0e0e0 !important; 
+        }
+        [data-bs-theme="dark"] #inv-docnum {
+            color: #ff77b5 !important; /* เปลี่ยนสีเลขที่บิลเป็นชมพูสว่างแทนแดงมืด */
+        }
+        [data-bs-theme="dark"] .inv-table th { 
+            background-color: #2c2c2c !important; 
+            color: #e0e0e0 !important; 
+            border-color: #444 !important; 
+        }
+        [data-bs-theme="dark"] .inv-table td { 
+            background-color: #1a1a1a !important; /* บังคับพื้นหลังตารางให้ดำ */
+            border-color: #444 !important; 
+            color: #e0e0e0 !important; /* บังคับตัวเลขให้เป็นสีขาวสว่าง */
+        }
+        [data-bs-theme="dark"] .total-row td { 
+            background-color: #163820 !important; 
+            color: #4ade80 !important; /* ยอดรวมสีเขียวสว่าง */
+        }
+        [data-bs-theme="dark"] .note-section { 
+            border-color: #555 !important; 
+            color: #b0b0b0 !important;
+        }
+        [data-bs-theme="dark"] .inv-footer div {
+            color: #888 !important;
+        }
+
+        /* ========================================= */
         /* 📌 บังคับให้หน้า Print เป็นสีขาวเสมอ (ป้องกันเปลืองหมึก) */
+        /* ========================================= */
         @media print {
             @page { size: A4 portrait; margin: 0; } 
             
@@ -67,14 +107,14 @@
             #detailArea { display: block !important; padding: 0; box-shadow: none; max-width: 100%; width: 100%; }
             
             .inv-table th { background: #f8f9fa !important; color: black !important; border-color: #ddd !important; }
-            .inv-table td { border-color: #ddd !important; color: black !important; }
-            .total-row { background: #e8f5e9 !important; color: black !important; }
-            .text-danger { color: #dc3545 !important; }
+            .inv-table td { border-color: #ddd !important; color: black !important; background-color: white !important;}
+            .total-row td { background: #e8f5e9 !important; color: black !important; }
+            .text-danger, #inv-docnum { color: #dc3545 !important; }
             
             .chart-container { height: 160px !important; max-height: 160px !important; margin: 10px auto 40px auto !important; page-break-inside: avoid; overflow: hidden !important; }
             .chart-container canvas { height: 160px !important; max-height: 160px !important; }
-            .note-section { margin-top: 30px !important; padding: 8px 12px; font-size: 12px; page-break-inside: avoid; clear: both; position: relative; border-color: #ccc !important;}
-            .inv-footer { margin-top: 15px; page-break-inside: avoid; color: #333 !important; }
+            .note-section { margin-top: 30px !important; padding: 8px 12px; font-size: 12px; page-break-inside: avoid; clear: both; position: relative; border-color: #ccc !important; color: #333 !important;}
+            .inv-footer div { color: #333 !important; }
         }
     </style>
 </head>
@@ -82,7 +122,7 @@
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40</h2>
+        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.41</h2>
         <div class="d-flex gap-2">
             <button id="themeToggle" class="btn btn-outline-dark fw-bold" onclick="toggleTheme()">🌙 โหมดมืด</button>
             <button class="btn btn-outline-secondary fw-bold" onclick="refreshData(this)">🔄 รีเฟรชข้อมูล</button>
@@ -195,7 +235,7 @@
             <strong>ที่อยู่:</strong> <span id="inv-addr">-</span>
         </div>
         <div class="text-start">
-            <strong>เลขที่:</strong> <span id="inv-docnum" style="color: #dc3545; font-weight: bold;">-</span><br>
+            <strong>เลขที่:</strong> <span id="inv-docnum" style="font-weight: bold;">-</span><br>
             <strong>ประจำเดือน:</strong> <span id="inv-month">-</span><br>
             <strong>วันที่ออกเอกสาร:</strong> <span id="inv-date">-</span>
         </div>
@@ -228,7 +268,7 @@
 </div>
 
 <script>
-    // 📌 ใส่ Web App URL ของคุณที่นี่
+    // 📌 ใส่ Web App URL ของคุณที่นี่ (สำคัญมาก)
    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzpVcY2tAoDDyxUwl3tqobYxYgm-DHJ6SqwTcAHpAAD2Dz17-AtXfl3naB8xI4YhMq9/exec"; 
 
     let usageData = { headers: [], rows: [] };
@@ -609,7 +649,7 @@
     }
 
     function closeDetailView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.41";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
