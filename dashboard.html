@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39</title>
+    <title>ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; }
+        body { background-color: #f0f2f5; padding-top: 20px; font-family: 'Segoe UI', Tahoma, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 20px; transition: background-color 0.3s, box-shadow 0.3s; }
         .table-responsive { max-height: 60vh; overflow-y: auto; }
-        th { position: sticky; top: 0; background-color: #f8f9fa !important; z-index: 1; }
+        th { position: sticky; top: 0; background-color: #f8f9fa !important; z-index: 1; transition: background-color 0.3s, color 0.3s; }
         .val-elec { color: #d63384; font-weight: bold; }
         .val-water { color: #0dcaf0; font-weight: bold; }
-        .val-total { color: #198754; font-weight: bold; background-color: #e8f5e9 !important; }
+        .val-total { color: #198754; font-weight: bold; background-color: #e8f5e9 !important; transition: background-color 0.3s; }
 
-        #detailArea { display: none; background-color: white; font-family: 'Sarabun', sans-serif; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #detailArea { display: none; background-color: white; font-family: 'Sarabun', sans-serif; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background-color 0.3s, color 0.3s; }
         .print-controls { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px dashed #ccc; padding-bottom: 15px;}
         .inv-header { text-align: center; margin-bottom: 15px; }
         .inv-info { display: flex; justify-content: space-between; margin: 20px 0; font-size: 14px; line-height: 1.6; }
@@ -31,41 +31,54 @@
         
         .chart-container { width: 100%; max-width: 700px; margin: 15px auto; position: relative; height: 250px; }
 
+        /* 📌 โหมด Dark Theme */
+        [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
+        [data-bs-theme="dark"] .card { background-color: #1e1e1e; box-shadow: 0 4px 12px rgba(255,255,255,0.05); }
+        [data-bs-theme="dark"] th { background-color: #2c2c2c !important; color: #e0e0e0; border-color: #444; }
+        [data-bs-theme="dark"] td { border-color: #444; color: #e0e0e0; }
+        [data-bs-theme="dark"] .val-total { background-color: #193c24 !important; color: #4ade80; }
+        [data-bs-theme="dark"] .bg-light { background-color: #1e1e1e !important; }
+        [data-bs-theme="dark"] .bg-white { background-color: #2a2a2a !important; color: #fff !important; }
+        [data-bs-theme="dark"] .text-dark { color: #e0e0e0 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #a0a0a0 !important; }
+        
+        /* Dark Theme สำหรับหน้าบิล */
+        [data-bs-theme="dark"] #detailArea { background-color: #1e1e1e; color: #e0e0e0; }
+        [data-bs-theme="dark"] .inv-table th { background: #2c2c2c; color: #e0e0e0; border-color: #555; }
+        [data-bs-theme="dark"] .inv-table td { border-color: #555; }
+        [data-bs-theme="dark"] .total-row { background: #193c24; color: #4ade80; }
+
+        /* 📌 บังคับให้หน้า Print เป็นสีขาวเสมอ (ป้องกันเปลืองหมึก) */
         @media print {
             @page { size: A4 portrait; margin: 0; } 
             
-            body { background-color: white; padding: 15mm 15mm 0 15mm !important; margin: 0 !important; }
+            body, #detailArea { background-color: white !important; color: black !important; padding: 15mm 15mm 0 15mm !important; margin: 0 !important; }
+            html { filter: invert(0) hue-rotate(0deg) !important; }
             
             #dashboardArea, .print-controls { display: none !important; }
             #detailArea { display: block !important; padding: 0; box-shadow: none; max-width: 100%; width: 100%; }
             
-            .inv-header { margin-bottom: 5px; }
-            .inv-header div:nth-child(1) { font-size: 24px !important; }
-            .inv-header div:nth-child(2) { font-size: 16px !important; }
-            .inv-info { margin: 10px 0; font-size: 13px; line-height: 1.4; }
-            .inv-table { margin-bottom: 10px; font-size: 13px; }
-            .inv-table th, .inv-table td { padding: 4px 8px; }
+            .inv-table th { background: #f8f9fa !important; color: black !important; border-color: #ddd !important; }
+            .inv-table td { border-color: #ddd !important; color: black !important; }
+            .total-row { background: #e8f5e9 !important; color: black !important; }
+            .text-danger { color: #dc3545 !important; }
             
-            .chart-container { 
-                height: 160px !important; 
-                max-height: 160px !important; 
-                margin: 10px auto 40px auto !important; 
-                page-break-inside: avoid; 
-                overflow: hidden !important; 
-            }
+            .chart-container { height: 160px !important; max-height: 160px !important; margin: 10px auto 40px auto !important; page-break-inside: avoid; overflow: hidden !important; }
             .chart-container canvas { height: 160px !important; max-height: 160px !important; }
-            
-            .note-section { margin-top: 30px !important; padding: 8px 12px; font-size: 12px; page-break-inside: avoid; clear: both; position: relative;}
-            .inv-footer { margin-top: 15px; page-break-inside: avoid; }
+            .note-section { margin-top: 30px !important; padding: 8px 12px; font-size: 12px; page-break-inside: avoid; clear: both; position: relative; border-color: #ccc !important;}
+            .inv-footer { margin-top: 15px; page-break-inside: avoid; color: #333 !important; }
         }
     </style>
 </head>
 <body>
 
 <div id="dashboardArea" class="container-fluid px-2 px-md-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39</h2>
-        <button class="btn btn-outline-secondary fw-bold" onclick="refreshData(this)">🔄 รีเฟรชข้อมูล</button>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="text-primary mb-0">📊 ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40</h2>
+        <div class="d-flex gap-2">
+            <button id="themeToggle" class="btn btn-outline-dark fw-bold" onclick="toggleTheme()">🌙 โหมดมืด</button>
+            <button class="btn btn-outline-secondary fw-bold" onclick="refreshData(this)">🔄 รีเฟรชข้อมูล</button>
+        </div>
     </div>
 
     <div class="card p-3">
@@ -167,8 +180,7 @@
                 <div style="font-size: 15px; color: #555;">
                         9 หมู่ที่ 3 ต.คลองสาม อ.คลองหลวง จ.ปทุมธานี 12120<br>
 						เลขผู้เสียภาษี 0125565020521
-                </div>
-    </div>
+                </div>    </div>
     <div class="inv-info">
         <div>
             <strong>ชื่อลูกค้า:</strong> <span id="inv-cust">-</span><br>
@@ -209,7 +221,7 @@
 
 <script>
     // 📌 ใส่ Web App URL ของคุณที่นี่
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzpVcY2tAoDDyxUwl3tqobYxYgm-DHJ6SqwTcAHpAAD2Dz17-AtXfl3naB8xI4YhMq9/exec"; 
+   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzpVcY2tAoDDyxUwl3tqobYxYgm-DHJ6SqwTcAHpAAD2Dz17-AtXfl3naB8xI4YhMq9/exec"; 
 
     let usageData = { headers: [], rows: [] };
     let meterData = { headers: [], rows: [] };
@@ -221,27 +233,55 @@
     let currentBillYear = 0;
     let chartInstance = null; 
 
-    // 📌 แก้ไขจากชื่อย่อ เป็นชื่อเดือนเต็ม
     const fullMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const shortMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
+    // 📌 ระบบตั้งค่า Dark Mode
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        html.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('klong3_theme', newTheme);
+        updateThemeButton(newTheme);
+        
+        if (chartInstance && currentCustomer) {
+            const colIdx = parseInt(document.getElementById('monthSelect').value);
+            buildTrendChart(currentCustomer, colIdx); // วาดกราฟใหม่เพื่อให้สีตัวหนังสือเปลี่ยน
+        }
+    }
+
+    function updateThemeButton(theme) {
+        const btn = document.getElementById('themeToggle');
+        if (theme === 'dark') {
+            btn.innerHTML = '☀️ โหมดสว่าง';
+            btn.classList.replace('btn-outline-dark', 'btn-outline-light');
+        } else {
+            btn.innerHTML = '🌙 โหมดมืด';
+            btn.classList.replace('btn-outline-light', 'btn-outline-dark');
+        }
+    }
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('klong3_theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        updateThemeButton(savedTheme);
+    }
+
+    // ฟังก์ชันแปลงเลขเป็นอักษรไทย
     function ArabicToThaiBaht(numbers) {
         numbers = parseFloat(numbers).toFixed(2);
         let numberArray = numbers.split('.');
-        let baht = numberArray[0];
-        let satang = numberArray[1];
-        let result = "";
-        let digit = ['ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
-        let unit = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+        let baht = numberArray[0]; let satang = numberArray[1];
+        let result = ""; let digit = ['ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า']; let unit = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
         function convert(nums) {
             let res = ""; let len = nums.length;
             for (let i = 0; i < len; i++) {
                 let n = nums.charAt(i); let u = len - i - 1;
                 if (n !== '0') {
-                    if (u === 1 && n === '1') res += 'สิบ';
-                    else if (u === 1 && n === '2') res += 'ยี่สิบ';
-                    else if (u === 0 && n === '1' && len > 1) res += 'เอ็ด';
-                    else res += digit[n] + unit[u];
+                    if (u === 1 && n === '1') res += 'สิบ'; else if (u === 1 && n === '2') res += 'ยี่สิบ'; else if (u === 0 && n === '1' && len > 1) res += 'เอ็ด'; else res += digit[n] + unit[u];
                 }
             } return res;
         }
@@ -251,16 +291,11 @@
     }
 
     function refreshData(btn) {
-        btn.innerText = "⏳ กำลังโหลด...";
-        btn.disabled = true;
+        btn.innerText = "⏳ กำลังโหลด..."; btn.disabled = true;
         document.getElementById('monthSelect').innerHTML = '<option value="">⏳ กำลังโหลดข้อมูล...</option>';
         document.getElementById('monthSelect').disabled = true;
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td></tr>';
-        
-        fetchAll().then(() => {
-            btn.innerText = "🔄 รีเฟรชข้อมูล";
-            btn.disabled = false;
-        });
+        fetchAll().then(() => { btn.innerText = "🔄 รีเฟรชข้อมูล"; btn.disabled = false; });
     }
 
     async function fetchAll() {
@@ -285,17 +320,14 @@
         if (isoMatch) { y = parseInt(isoMatch[1], 10); m = parseInt(isoMatch[2], 10); }
         else if (str.includes('/')) {
             let p = str.split('/');
-            if (p.length === 3) { m = parseInt(p[1], 10); y = parseInt(p[2], 10); }
-            else if (p.length === 2) { m = parseInt(p[0], 10); y = parseInt(p[1], 10); }
+            if (p.length >= 2) { m = parseInt(p[1], 10); y = parseInt(p[2] || 0, 10); }
         } else {
             const monthsMap = {'มกราคม':1,'ม.ค.':1,'มค':1,'กุมภาพันธ์':2,'กพ':2,'มีนาคม':3,'มีค':3,'เมษายน':4,'เมย':4,'พฤษภาคม':5,'พค':5,'มิถุนายน':6,'มิย':6,'กรกฎาคม':7,'กค':7,'สิงหาคม':8,'สค':8,'กันยายน':9,'กย':9,'ตุลาคม':10,'ตค':10,'พฤศจิกายน':11,'พย':11,'ธันวาคม':12,'ธค':12};
             let yStr = str.replace(/\s+/g, '');
             for (let key in monthsMap) {
                 if (yStr.includes(key)) {
-                    m = monthsMap[key];
-                    let yearMatch = yStr.replace(key, '').match(/\d+/);
-                    if (yearMatch) y = parseInt(yearMatch[0], 10);
-                    break;
+                    m = monthsMap[key]; let yearMatch = yStr.replace(key, '').match(/\d+/);
+                    if (yearMatch) y = parseInt(yearMatch[0], 10); break;
                 }
             }
         }
@@ -305,30 +337,21 @@
 
     function setupMonth() {
         const sel = document.getElementById('monthSelect');
-        sel.innerHTML = '';
-        let months = [];
+        sel.innerHTML = ''; let months = [];
 
         usageData.headers.forEach((h, i) => {
             const parsedDate = parseMeterHeader(h);
-            
             if (parsedDate) {
                 let hasData = false;
-
                 for (let r = 0; r < usageData.rows.length; r++) {
                     let row = usageData.rows[r];
                     let id = String(row[0] || '').trim().toUpperCase();
-                    
                     if (/^E\d+$/.test(id) || /^W\d+$/.test(id)) {
                         let cellValue = String(row[i] || '').trim();
-                        if (cellValue !== '' && cellValue !== '0') {
-                            hasData = true;
-                            break; 
-                        }
+                        if (cellValue !== '' && cellValue !== '0') { hasData = true; break; }
                     }
                 }
-
                 if (hasData) {
-                    // 📌 เปลี่ยนการแสดงผลเป็นชื่อเดือนเต็ม
                     let labelName = `${fullMonths[parsedDate.m - 1]} ${String(parsedDate.y).slice(-2)}`;
                     months.push({ name: labelName, idx: i });
                 }
@@ -337,11 +360,9 @@
 
         if (months.length > 0) {
             months.reverse().forEach(m => sel.add(new Option(m.name, m.idx)));
-            sel.disabled = false;
-            renderDashboard();
+            sel.disabled = false; renderDashboard();
         } else {
-            sel.add(new Option("❌ ยังไม่มีข้อมูลในระบบ", ""));
-            sel.disabled = true;
+            sel.add(new Option("❌ ยังไม่มีข้อมูลในระบบ", "")); sel.disabled = true;
         }
     }
 
@@ -351,27 +372,18 @@
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
         
         let targetDate = parseMeterHeader(usageData.headers[colIdx]);
-        let mColIdx = -1;
-        let currLabel = "", prevLabel = "";
+        let mColIdx = -1; let currLabel = "", prevLabel = "";
 
         if (targetDate) {
-            currentBillMonth = targetDate.m;
-            currentBillYear = targetDate.y;
-
-            let meterTargetM = targetDate.m - 1;
-            let meterTargetY = targetDate.y;
-            
-            if (meterTargetM === 0) {
-                meterTargetM = 12;
-                meterTargetY--;
-            }
+            currentBillMonth = targetDate.m; currentBillYear = targetDate.y;
+            let meterTargetM = targetDate.m - 1; let meterTargetY = targetDate.y;
+            if (meterTargetM === 0) { meterTargetM = 12; meterTargetY--; }
 
             mColIdx = meterData.headers.findIndex(h => {
                 let p = parseMeterHeader(h);
                 return p && p.m === meterTargetM && p.y === meterTargetY;
             });
             
-            // 📌 เปลี่ยนการแสดงผลในหัวข้อการใช้มิเตอร์เป็นชื่อเต็ม
             currLabel = `${fullMonths[targetDate.m-1]} ${String(targetDate.y).slice(-2)}`;
             let pm = targetDate.m - 1, py = targetDate.y;
             if (pm === 0) { pm = 12; py--; }
@@ -384,7 +396,6 @@
 
         let eu = 0, wu = 0;
         let vEbill = 0, vEsolar = 0, vEcommon = 0, vWbill = 0, vWcommon = 0; 
-        
         let custs = {};
 
         usageData.rows.forEach(row => {
@@ -403,9 +414,7 @@
                 if (!custs[name]) custs[name] = { eU: 0, wU: 0, cf: 0, sf: 0, ad: '', shopId: '00', meters: [] };
                 
                 let numMatch = id.match(/\d+/);
-                if (numMatch && custs[name].shopId === '00') {
-                    custs[name].shopId = numMatch[0].padStart(2, '0').slice(-2);
-                }
+                if (numMatch && custs[name].shopId === '00') custs[name].shopId = numMatch[0].padStart(2, '0').slice(-2);
 
                 let meterInfo = { id, p: 0, c: 0, pLabel: prevLabel, cLabel: currLabel, type: '', xf: 1 };
                 if (mColIdx !== -1) {
@@ -417,15 +426,8 @@
                     }
                 }
 
-                if (id.startsWith('E')) {
-                    custs[name].eU += val;
-                    meterInfo.type = 'E';
-                    custs[name].meters.push(meterInfo);
-                } else if (id.startsWith('W')) {
-                    custs[name].wU += val;
-                    meterInfo.type = 'W';
-                    custs[name].meters.push(meterInfo);
-                }
+                if (id.startsWith('E')) { custs[name].eU += val; meterInfo.type = 'E'; custs[name].meters.push(meterInfo); } 
+                else if (id.startsWith('W')) { custs[name].wU += val; meterInfo.type = 'W'; custs[name].meters.push(meterInfo); }
 
                 if (adIdx >= 0) custs[name].ad = row[adIdx] || '';
                 custs[name].cf += (cfIdx >= 0 ? Number(row[cfIdx]) || 0 : 0);
@@ -468,18 +470,13 @@
 
         document.getElementById('tableBody').innerHTML = html;
         ['sumElecUnits','sumElecPrice','sumWaterUnits','sumWaterPrice','sumCommonFee','sumSignFee','sumTotalPrice'].forEach((id,i)=>
-            document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{
-                minimumFractionDigits: (i===0||i===2) ? 0 : 2,
-                maximumFractionDigits: 2
-            })
+            document.getElementById(id).innerText = Object.values(s)[i].toLocaleString(undefined,{ minimumFractionDigits: (i===0||i===2) ? 0 : 2, maximumFractionDigits: 2 })
         );
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
 
     function buildTrendChart(customerName, currentMonthColIndex) {
-        let labels = [];
-        let elecTrend = [];
-        let waterTrend = [];
+        let labels = []; let elecTrend = []; let waterTrend = [];
 
         let startCol = currentMonthColIndex - 11;
         if (startCol < 0) startCol = 0; 
@@ -487,11 +484,9 @@
         for (let c = startCol; c <= currentMonthColIndex; c++) {
             let mName = usageData.headers[c];
             let parsed = parseMeterHeader(mName);
-            
             if (!parsed) continue;
 
-            // 📌 เปลี่ยนแกนกราฟเป็นชื่อเดือนเต็ม
-            labels.push(`${fullMonths[parsed.m - 1]} ${String(parsed.y).slice(-2)}`);
+            labels.push(`${shortMonths[parsed.m - 1]} ${String(parsed.y).slice(-2)}`);
             
             let sumE = 0; let sumW = 0;
             usageData.rows.forEach(row => {
@@ -502,68 +497,50 @@
                     if (id.startsWith('W')) sumW += Number(row[c]) || 0;
                 }
             });
-            elecTrend.push(sumE);
-            waterTrend.push(sumW);
+            elecTrend.push(sumE); waterTrend.push(sumW);
         }
 
         const ctx = document.getElementById('usageChart').getContext('2d');
-        if (chartInstance) { chartInstance.destroy(); }
+        if (chartInstance) chartInstance.destroy();
+
+        // เช็ค Theme ปัจจุบันเพื่อเปลี่ยนสีตัวอักษรและเส้น Grid
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const tColor = isDark ? '#e0e0e0' : '#666';
+        const gColor = isDark ? '#444' : '#e5e5e5';
 
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'ไฟฟ้า (หน่วย)',
-                        data: elecTrend,
-                        backgroundColor: 'rgba(214, 51, 132, 0.7)',
-                        borderColor: 'rgba(214, 51, 132, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'น้ำประปา (หน่วย)',
-                        data: waterTrend,
-                        backgroundColor: 'rgba(13, 202, 240, 0.7)',
-                        borderColor: 'rgba(13, 202, 240, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y1'
-                    }
+                    { label: 'ไฟฟ้า (หน่วย)', data: elecTrend, backgroundColor: 'rgba(214, 51, 132, 0.7)', borderColor: 'rgba(214, 51, 132, 1)', borderWidth: 1, yAxisID: 'y' },
+                    { label: 'น้ำประปา (หน่วย)', data: waterTrend, backgroundColor: 'rgba(13, 202, 240, 0.7)', borderColor: 'rgba(13, 202, 240, 1)', borderWidth: 1, yAxisID: 'y1' }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 0 }, 
+                responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, 
                 scales: {
-                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'ไฟ (หน่วย)', font: { family: 'Sarabun' } } },
-                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'น้ำ (หน่วย)', font: { family: 'Sarabun' } } }
+                    x: { ticks: { color: tColor }, grid: { color: gColor } },
+                    y: { type: 'linear', display: true, position: 'left', ticks: { color: tColor }, grid: { color: gColor }, title: { display: true, text: 'ไฟ (หน่วย)', font: { family: 'Sarabun' }, color: tColor } },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: tColor }, title: { display: true, text: 'น้ำ (หน่วย)', font: { family: 'Sarabun' }, color: tColor } }
                 },
                 plugins: {
-                    title: { display: true, text: 'ประวัติการใช้งานย้อนหลัง', font: { family: 'Sarabun', size: 16, weight: 'bold' } },
-                    legend: { labels: { font: { family: 'Sarabun' } } }
+                    title: { display: true, text: 'ประวัติการใช้งานย้อนหลัง', font: { family: 'Sarabun', size: 16, weight: 'bold' }, color: tColor },
+                    legend: { labels: { font: { family: 'Sarabun' }, color: tColor } }
                 }
             }
         });
     }
 
     function openDetailView(index) {
-        const name = customerList[index];
-        currentCustomer = name;
-        const d = printStore[name];
-        const vat = d.tt * 0.07;
-        const gTotal = d.tt + vat;
+        const name = customerList[index]; currentCustomer = name;
+        const d = printStore[name]; const vat = d.tt * 0.07; const gTotal = d.tt + vat;
         const colIdx = parseInt(document.getElementById('monthSelect').value);
 
         if (isMobileDevice) {
-            const btnInv = document.getElementById('btnInvoice');
-            const btnRec = document.getElementById('btnReceipt');
-            btnInv.disabled = true;
-            btnRec.disabled = true;
-            btnInv.innerText = "🚫 มือถือสั่งพิมพ์ไม่ได้";
-            btnInv.classList.replace('btn-primary', 'btn-secondary');
-            btnRec.style.display = 'none';
+            const btnInv = document.getElementById('btnInvoice'); const btnRec = document.getElementById('btnReceipt');
+            btnInv.disabled = true; btnRec.disabled = true; btnInv.innerText = "🚫 มือถือสั่งพิมพ์ไม่ได้";
+            btnInv.classList.replace('btn-primary', 'btn-secondary'); btnRec.style.display = 'none';
         }
 
         const yyStr = currentBillYear > 0 ? String(currentBillYear).slice(-2) : '00';
@@ -573,22 +550,14 @@
 
         document.getElementById('docTitle').innerText = 'ใบแจ้งหนี้';
         document.getElementById('signatureText').innerText = '(ผู้รับเงิน)';
-
         document.getElementById('inv-cust').innerText = name;
         document.getElementById('inv-addr').innerText = d.ad || '-';
         document.getElementById('inv-docnum').innerText = documentNumber;
         document.getElementById('inv-month').innerText = selectedMonthName;
         document.getElementById('inv-date').innerText = new Date().toLocaleDateString('th-TH');
         
-        let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => {
-            const pMulti = m.p * m.xf; const cMulti = m.c * m.xf;
-            return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
-        }).join('');
-        
-        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => {
-            const pMulti = m.p * m.xf; const cMulti = m.c * m.xf;
-            return `<small style="display:block; color:#666; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${pMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${cMulti.toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`;
-        }).join('');
+        let meterLinesE = d.meters.filter(m => m.type === 'E').map(m => `<small style="display:block; color:#888; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${(m.p * m.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${(m.c * m.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`).join('');
+        let meterLinesW = d.meters.filter(m => m.type === 'W').map(m => `<small style="display:block; color:#888; margin-top: 2px;">ID: ${m.id} (${m.pLabel}: <b>${(m.p * m.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</b> - ${m.cLabel}: <b>${(m.c * m.xf).toLocaleString(undefined, {maximumFractionDigits: 2})}</b>)</small>`).join('');
 
         document.getElementById('inv-tbody').innerHTML = `
             <tr><td class="text-left">1. ค่าไฟฟ้า ${meterLinesE}</td><td>${d.eU.toLocaleString(undefined, {maximumFractionDigits: 2})}</td><td>${d.euRate}</td><td>${d.ep.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>
@@ -614,53 +583,34 @@
         document.getElementById('docTitle').innerText = docTitleText;
         document.title = `${docTitleText}-${currentCustomer}-${selectedMonthName}`;
 
-        const d = printStore[currentCustomer];
-        const elecMeter = d.meters.find(m => m.type === 'E');
+        const d = printStore[currentCustomer]; const elecMeter = d.meters.find(m => m.type === 'E');
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         
         if (elecMeter && colIdx) {
-            const timestamp = new Date().toLocaleString('th-TH');
-            const logMessage = `${docTitleText} ${timestamp}`;
-            const originalText = btnElem.innerText;
-            
-            btnElem.innerText = "⏳ กำลังบันทึกประวัติ...";
-            btnElem.disabled = true;
+            const logMessage = `${docTitleText} ${new Date().toLocaleString('th-TH')}`;
+            const originalText = btnElem.innerText; btnElem.innerText = "⏳ กำลังบันทึกประวัติ..."; btnElem.disabled = true;
 
             try {
-                const url = `${WEB_APP_URL}?action=addLog&id=${elecMeter.id}&col=${colIdx}&msg=${encodeURIComponent(logMessage)}`;
-                const response = await fetch(url);
-                const textRes = await response.text();
-                
-                try {
-                    const res = JSON.parse(textRes);
-                    if (res.status === 'success') {
-                        alert(`📋 ประวัติการพิมพ์ของลูกค้ารายนี้:\n\n${res.note}`);
-                    } else {
-                        alert("⚠️ ระบบบันทึกประวัติไม่ได้: " + res.message);
-                    }
-                } catch (jsonErr) {
-                    alert("⚠️ คำเตือน: คุณยังไม่ได้กด New Deployment ในหน้า Apps Script ครับ ระบบจึงหาคำสั่งบันทึก Note ไม่เจอ (แต่ยังสามารถพิมพ์บิลได้ปกติครับ)");
-                }
-            } catch(e) {
-                alert("⚠️ สัญญาณเน็ตมีปัญหา ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ (แต่ยังสามารถพิมพ์บิลได้ปกติครับ)");
-            } finally {
-                btnElem.innerText = originalText;
-                btnElem.disabled = false;
-            }
+                const response = await fetch(`${WEB_APP_URL}?action=addLog&id=${elecMeter.id}&col=${colIdx}&msg=${encodeURIComponent(logMessage)}`);
+                const res = JSON.parse(await response.text());
+                if (res.status === 'success') alert(`📋 ประวัติการพิมพ์:\n\n${res.note}`);
+            } catch(e) { } 
+            finally { btnElem.innerText = originalText; btnElem.disabled = false; }
         }
-
-        setTimeout(() => {
-            window.print();
-        }, 100);
+        setTimeout(() => { window.print(); }, 100);
     }
 
     function closeDetailView() {
-        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.39";
+        document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.40";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
     }
 
-    window.onload = fetchAll;
+    // 📌 เริ่มต้นทำงาน: โหลด Theme และดึงข้อมูล
+    window.onload = function() {
+        initTheme();
+        fetchAll();
+    };
 </script>
 </body>
 </html>
