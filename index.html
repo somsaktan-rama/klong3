@@ -176,7 +176,6 @@
             const res = await response.json();
 
 if (res.status === 'success') {
-                // 📌 คำนวณวันที่ เวลา และ กะทำงาน
                 const now = new Date();
                 const d = String(now.getDate()).padStart(2, '0');
                 const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -187,11 +186,8 @@ if (res.status === 'success') {
                 
                 const timeFormatted = `${String(hours).padStart(2, '0')}:${mins}:${secs}`;
                 
-                // ถ้านอกช่วง 06:00 - 17:59 ถือว่าเป็นกะดึก
-                const shift = (hours >= 6 && hours < 18) ? "กะเช้า" : "กะดึก";
-
                 status.style.color = "#198754";
-                status.textContent = `✅ บันทึกวันที่ ${d}/${m}/${y} -${timeFormatted}- ${shift} เรียบร้อย!`;
+                status.textContent = `✅ บันทึกวันที่ ${d}/${m}/${y} -${timeFormatted} เรียบร้อย!`;
                 
                 loadInfo(id); 
             }
