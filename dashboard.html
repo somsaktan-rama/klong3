@@ -627,7 +627,7 @@
     }
 
     async function executePrint(type, btnElem) {
-        const docTitleText = (type === 'invoice') ? 'ใบแจ้งหนี้' : 'ใบเสร็จรับเงิน';
+        const docTitleText = (type === 'invoice') ? 'ใบแจ้งหนี้' : 'ใบเสร็จรับเงิน/ใบกำกับภาษี';
         document.getElementById('docTitle').innerText = docTitleText;
         document.title = `${docTitleText}-${currentCustomer}-${selectedMonthName}`;
 
