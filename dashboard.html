@@ -174,42 +174,58 @@
         </div>
     </div>
 
-    <div class="card p-3 bg-light border-0">
-        <h6 class="text-primary fw-bold mb-3">📌 ข้อมูลอ้างอิงเพิ่มเติม (ประจำเดือน)</h6>
-        <div class="row row-cols-2 row-cols-md-5 g-3 text-center">
-            <div class="col">
-                <div class="p-2 bg-white rounded shadow-sm border-start border-danger border-4">
-                    <div class="text-muted" style="font-size: 0.8rem;">Ebill (ไฟฟ้าภูมิภาค)</div>
-                    <div class="fw-bold text-dark fs-5" id="valEbill">0</div>
+  <div class="card p-3 bg-light border-0 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-primary fw-bold mb-0">📌 แก้ไขค่าอ้างอิงและเรทราคา (ประจำเดือน)</h6>
+            <button class="btn btn-sm btn-success fw-bold" onclick="saveAllReferences()">💾 บันทึกค่าเดือนนี้</button>
+        </div>
+        <div class="row g-3 text-center">
+            <div class="col-6 col-md">
+                <div class="p-2 bg-white rounded border-start border-danger border-4">
+                    <div class="text-muted small">Ebill (ภูมิภาค)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold" id="valEbill">
                 </div>
             </div>
-            <div class="col">
-                <div class="p-2 bg-white rounded shadow-sm border-start border-warning border-4">
-                    <div class="text-muted" style="font-size: 0.8rem;">Esolar (ไฟฟ้า Solar)</div>
-                    <div class="fw-bold text-dark fs-5" id="valEsolar">0</div>
+            <div class="col-6 col-md">
+                <div class="p-2 bg-white rounded border-start border-warning border-4">
+                    <div class="text-muted small">Esolar (Solar)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold" id="valEsolar">
                 </div>
             </div>
-            <div class="col">
-                <div class="p-2 bg-white rounded shadow-sm border-start border-secondary border-4">
-                    <div class="text-muted" style="font-size: 0.8rem;">Ecommon (ไฟฟ้าส่วนกลาง)</div>
-                    <div class="fw-bold text-dark fs-5" id="valEcommon">0</div>
+            <div class="col-6 col-md">
+                <div class="p-2 bg-white rounded border-start border-secondary border-4">
+                    <div class="text-muted small">Ecommon (ส่วนกลาง)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold" id="valEcommon">
                 </div>
             </div>
-            <div class="col">
-                <div class="p-2 bg-white rounded shadow-sm border-start border-info border-4">
-                    <div class="text-muted" style="font-size: 0.8rem;">Wbill (ประปาภูมิภาค)</div>
-                    <div class="fw-bold text-dark fs-5" id="valWbill">0</div>
+            <div class="col-6 col-md">
+                <div class="p-2 bg-white rounded border-start border-info border-4">
+                    <div class="text-muted small">Wbill (ภูมิภาค)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold" id="valWbill">
                 </div>
             </div>
-            <div class="col">
-                <div class="p-2 bg-white rounded shadow-sm border-start border-secondary border-4">
-                    <div class="text-muted" style="font-size: 0.8rem;">Wcommon (น้ำส่วนกลาง)</div>
-                    <div class="fw-bold text-dark fs-5" id="valWcommon">0</div>
+            <div class="col-6 col-md">
+                <div class="p-2 bg-white rounded border-start border-secondary border-4">
+                    <div class="text-muted small">Wcommon (น้ำส่วนกลาง)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold" id="valWcommon">
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mt-1 text-center justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="p-2 bg-white rounded border-start border-primary border-4">
+                    <div class="text-muted small">เรทค่าไฟ (EU)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold text-primary" id="inputEU">
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-2 bg-white rounded border-start border-info border-4">
+                    <div class="text-muted small">เรทค่าน้ำ (WU)</div>
+                    <input type="number" step="any" class="form-control form-control-sm border-0 text-center fw-bold text-info" id="inputWU">
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 <div id="detailArea">
     <div class="print-controls">
@@ -414,7 +430,7 @@
         }
     }
 
-    function renderDashboard() {
+function renderDashboard() {
         const colIdx = parseInt(document.getElementById('monthSelect').value);
         if (isNaN(colIdx)) return;
         selectedMonthName = document.getElementById('monthSelect').selectedOptions[0].text;
@@ -483,15 +499,18 @@
             }
         });
 
-        document.getElementById('valEbill').innerText = vEbill.toLocaleString(undefined, {maximumFractionDigits: 2});
-        document.getElementById('valEsolar').innerText = vEsolar.toLocaleString(undefined, {maximumFractionDigits: 2});
-        document.getElementById('valEcommon').innerText = vEcommon.toLocaleString(undefined, {maximumFractionDigits: 2});
-        document.getElementById('valWbill').innerText = vWbill.toLocaleString(undefined, {maximumFractionDigits: 2});
-        document.getElementById('valWcommon').innerText = vWcommon.toLocaleString(undefined, {maximumFractionDigits: 2});
+        // 📌 เปลี่ยนมาใช้ .value เพื่อยัดตัวเลขลงในช่อง Input
+        document.getElementById('valEbill').value = vEbill;
+        document.getElementById('valEsolar').value = vEsolar;
+        document.getElementById('valEcommon').value = vEcommon;
+        document.getElementById('valWbill').value = vWbill;
+        document.getElementById('valWcommon').value = vWcommon;
 
-        document.getElementById('euRate').innerText = eu;
-        document.getElementById('wuRate').innerText = wu;
-        document.getElementById('rateInfo').style.display = 'block';
+        document.getElementById('inputEU').value = eu;
+        document.getElementById('inputWU').value = wu;
+        
+        // ซ่อนข้อความเรทราคาแบบเก่า (ถ้ายังมีอยู่ใน HTML)
+        if(document.getElementById('rateInfo')) document.getElementById('rateInfo').style.display = 'none';
 
         let html = '', s = { eu:0, ep:0, wu:0, wp:0, cf:0, sf:0, tt:0 };
         printStore = custs;
@@ -522,8 +541,8 @@
         );
         document.getElementById('tableFoot').style.display = 'table-footer-group';
     }
-
-    function buildTrendChart(customerName, currentMonthColIndex) {
+	
+	function buildTrendChart(customerName, currentMonthColIndex) {
         let labels = []; let elecTrend = []; let waterTrend = [];
 
         let startCol = currentMonthColIndex - 11;
@@ -648,7 +667,42 @@
         setTimeout(() => { window.print(); }, 100);
     }
 
-    function closeDetailView() {
+// 📌 ฟังก์ชันใหม่สำหรับบันทึกค่าอ้างอิงทั้งหมดของเดือนนั้น
+    async function saveAllReferences() {
+        const colIdx = document.getElementById('monthSelect').value;
+        if (!colIdx) return;
+        
+        const refs = [
+            { id: 'EBILL', val: document.getElementById('valEbill').value },
+            { id: 'ESOLAR', val: document.getElementById('valEsolar').value },
+            { id: 'ECOMMON', val: document.getElementById('valEcommon').value },
+            { id: 'WBILL', val: document.getElementById('valWbill').value },
+            { id: 'WCOMMON', val: document.getElementById('valWcommon').value },
+            { id: 'EU', val: document.getElementById('inputEU').value },
+            { id: 'WU', val: document.getElementById('inputWU').value }
+        ];
+
+        if (!confirm(`ยืนยันการบันทึกค่าอ้างอิงและเรทราคาสำหรับเดือน ${selectedMonthName}?`)) return;
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = "⏳ กำลังบันทึก...";
+
+        try {
+            for (let item of refs) {
+                await fetch(`${WEB_APP_URL}?action=updateReference&id=${item.id}&val=${item.val}&col=${colIdx}`);
+            }
+            alert("✅ บันทึกค่าอ้างอิงและเรทราคาเรียบร้อยแล้ว ระบบจะโหลดข้อมูลใหม่");
+            refreshData(document.querySelector('button[onclick="refreshData(this)"]'));
+        } catch (e) {
+            alert("❌ เกิดข้อผิดพลาดในการบันทึก");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "💾 บันทึกค่าเดือนนี้";
+        }
+    }
+   
+	function closeDetailView() {
         document.title = "ค่าไฟ-ค่าน้ำ คลอง 3 V 1.41";
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('dashboardArea').style.display = 'block';
